@@ -1,50 +1,60 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
-
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Crear conexión a la base de datos usando mysql2/promise
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'a24bermirpre',  // Usuario proporcionado
     password: process.env.DB_PASSWORD || 'InstitutPedralbes_2024',  // Contraseña proporcionada
-    database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos en minúsculas
+    database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
-  });
+});
+
+// Obtener el directorio del archivo actual
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Leer el archivo JSON
+async function readDataFromJSON() {
+    const filePath = path.join(__dirname, 'data.json');
+    try {
+        const data = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Error al leer el archivo JSON:', error);
+        throw error;
+    }
+}
 
 // PRODUCTS
 
 // Obtener todos los productos
 async function getProducts() {
-    try {
-        const [rows] = await pool.query('SELECT * FROM Producto');
-        return rows;
-    } catch (error) {
-        console.error('Error al obtener los productos:', error);
-        throw error;
-    }
+    const jsonData = await readDataFromJSON();
+    return jsonData.productos; // Devolver la lista de productos del JSON
 }
 
 // Obtener un producto por ID
 async function getProduct(id) {
-    try {
-        const [rows] = await pool.query('SELECT * FROM Producto WHERE ID_producto = ?', [id]);
-        if (rows.length === 0) {
-            throw new Error('Producto no encontrado');
-        }
-        return rows[0];
-    } catch (error) {
-        console.error(`Error al obtener el producto con ID ${id}:`, error);
-        throw error;
+    const products = await getProducts();
+    const product = products.find(p => p.ID_producto === id); // Buscar por ID
+    if (!product) {
+        throw new Error('Producto no encontrado');
     }
+    return product;
 }
 
 // Insertar un nuevo producto
 async function postProduct(productData) {
     try {
         const { nombre, descripcion, precio, stock } = productData;
-        const [result] = await pool.query('INSERT INTO Producto (nombre, descripcion, precio, stock) VALUES (?, ?, ?, ?)', [nombre, descripcion, precio, stock]);
+        const [result] = await pool.query('INSERT INTO Producto (nombre, descripcion, precio, stock) VALUES (?, ?, ?, ?)', 
+            [nombre, descripcion, precio, stock]);
         return { id: result.insertId, ...productData };
     } catch (error) {
         console.error('Error al insertar el producto:', error);
@@ -54,20 +64,16 @@ async function postProduct(productData) {
 
 // Obtener todos los usuarios
 async function getUsers() {
-    try {
-        const [rows] = await pool.query('SELECT * FROM Usuario'); // Cambia 'Usuario' si el nombre de tu tabla es diferente
-        return rows;
-    } catch (error) {
-        console.error('Error al obtener los usuarios:', error);
-        throw error;
-    }
+    const jsonData = await readDataFromJSON();
+    return jsonData.usuarios; // Devolver la lista de usuarios del JSON
 }
 
 // Actualizar un producto
 async function updateProduct(id, productData) {
     try {
         const { nombre, descripcion, precio, stock } = productData;
-        const [result] = await pool.query('UPDATE Producto SET nombre = ?, descripcion = ?, precio = ?, stock = ? WHERE ID_producto = ?', [nombre, descripcion, precio, stock, id]);
+        const [result] = await pool.query('UPDATE Producto SET nombre = ?, descripcion = ?, precio = ?, stock = ? WHERE ID_producto = ?', 
+            [nombre, descripcion, precio, stock, id]);
         if (result.affectedRows === 0) {
             throw new Error('Producto no encontrado');
         }
@@ -96,34 +102,26 @@ async function deleteProduct(id) {
 
 // Obtener todas las órdenes
 async function getOrders() {
-    try {
-        const [rows] = await pool.query('SELECT * FROM Pedido');
-        return rows;
-    } catch (error) {
-        console.error('Error al obtener los pedidos:', error);
-        throw error;
-    }
+    const jsonData = await readDataFromJSON();
+    return jsonData.pedidos; // Devolver la lista de pedidos del JSON
 }
 
 // Obtener una orden por ID
 async function getOrder(id) {
-    try {
-        const [rows] = await pool.query('SELECT * FROM Pedido WHERE num_pedido = ?', [id]);
-        if (rows.length === 0) {
-            throw new Error('Pedido no encontrado');
-        }
-        return rows[0];
-    } catch (error) {
-        console.error(`Error al obtener el pedido con ID ${id}:`, error);
-        throw error;
+    const orders = await getOrders();
+    const order = orders.find(o => o.num_pedido === id); // Buscar por ID
+    if (!order) {
+        throw new Error('Pedido no encontrado');
     }
+    return order;
 }
 
 // Insertar una nueva orden
 async function postOrder(orderData) {
     try {
         const { ID_usuario, fecha, total_pedido, estado } = orderData;
-        const [result] = await pool.query('INSERT INTO Pedido (ID_usuario, fecha, total_pedido, estado) VALUES (?, ?, ?, ?)', [ID_usuario, fecha, total_pedido, estado]);
+        const [result] = await pool.query('INSERT INTO Pedido (ID_usuario, fecha, total_pedido, estado) VALUES (?, ?, ?, ?)', 
+            [ID_usuario, fecha, total_pedido, estado]);
         return { id: result.insertId, ...orderData };
     } catch (error) {
         console.error('Error al insertar el pedido:', error);
@@ -135,7 +133,8 @@ async function postOrder(orderData) {
 async function updateOrder(id, orderData) {
     try {
         const { ID_usuario, fecha, total_pedido, estado } = orderData;
-        const [result] = await pool.query('UPDATE Pedido SET ID_usuario = ?, fecha = ?, total_pedido = ?, estado = ? WHERE num_pedido = ?', [ID_usuario, fecha, total_pedido, estado, id]);
+        const [result] = await pool.query('UPDATE Pedido SET ID_usuario = ?, fecha = ?, total_pedido = ?, estado = ? WHERE num_pedido = ?', 
+            [ID_usuario, fecha, total_pedido, estado, id]);
         if (result.affectedRows === 0) {
             throw new Error('Pedido no encontrado');
         }
@@ -176,7 +175,6 @@ const communicationManager = {
     updateOrder,
     deleteOrder,
     getUsers, 
-
 };
 
 export { communicationManager };
@@ -192,18 +190,3 @@ async function testDatabaseConnection() {
     }
 }
 
-
-// pruebas
-
-// Función para probar getOrders
-async function testGetOrders() {
-    try {
-        const orders = await getOrders(); // Llama a la función getOrders
-        console.log('Pedidos obtenidos:', orders); // Muestra los pedidos en la consola
-    } catch (error) {
-        console.error('Error al obtener los pedidos:', error.message);
-    }
-}
-
-// Llamar a la función de prueba para getOrders
-testGetOrders();

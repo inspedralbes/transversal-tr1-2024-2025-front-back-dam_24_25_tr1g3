@@ -1,0 +1,31 @@
+{
+    "usuarios": [
+        { "nombre": "Juan Pérez", "correo": "juan.perez@example.com", "telefono": "123456789" },
+        { "nombre": "María López", "correo": "maria.lopez@example.com", "telefono": "987654321" },
+        { "nombre": "Luis García", "correo": "luis.garcia@example.com", "telefono": "456123789" }
+    ],
+    "productos": [
+        { "nombre": "Camisa de Algodón", "descripcion": "Camisa de algodón 100% con estampado floral.", "precio": 25.99, "stock": 50 },
+        { "nombre": "Jeans Ajustados", "descripcion": "Jeans ajustados de mezclilla, disponibles en varios tamaños.", "precio": 39.99, "stock": 30 },
+        { "nombre": "Vestido de Verano", "descripcion": "Vestido ligero de verano, ideal para días soleados.", "precio": 45.00, "stock": 20 },
+        { "nombre": "Chaqueta de Cuero", "descripcion": "Chaqueta de cuero genuino, perfecta para el invierno.", "precio": 120.00, "stock": 15 },
+        { "nombre": "Sudadera con Capucha", "descripcion": "Sudadera cómoda con capucha, disponible en varios colores.", "precio": 35.50, "stock": 40 },
+        { "nombre": "Zapatos Deportivos", "descripcion": "Zapatos deportivos ligeros, ideales para el entrenamiento.", "precio": 60.00, "stock": 25 },
+        { "nombre": "Falda Midi", "descripcion": "Falda midi elegante, perfecta para ocasiones especiales.", "precio": 55.00, "stock": 10 },
+        { "nombre": "Camiseta Básica", "descripcion": "Camiseta básica de algodón, disponible en varios colores.", "precio": 15.99, "stock": 100 },
+        { "nombre": "Pantalones Cortos", "descripcion": "Pantalones cortos ligeros, ideales para el verano.", "precio": 29.99, "stock": 35 },
+        { "nombre": "Bufanda de Lana", "descripcion": "Bufanda de lana suave, perfecta para el frío.", "precio": 19.99, "stock": 20 }
+    ],
+    "pedidos": [
+        { "ID_usuario": 1, "fecha": "2024-10-22 10:00:00", "total_pedido": 125.98, "estado": "pendiente" },
+        { "ID_usuario": 2, "fecha": "2024-10-22 11:30:00", "total_pedido": 85.50, "estado": "completado" },
+        { "ID_usuario": 3, "fecha": "2024-10-22 12:15:00", "total_pedido": 55.00, "estado": "pendiente" }
+    ],
+    "detalle_pedidos": [
+        { "num_pedido": 1, "ID_producto": 1, "cantidad": 2, "precio_unitario": 25.99 },
+        { "num_pedido": 1, "ID_producto": 2, "cantidad": 1, "precio_unitario": 39.99 },
+        { "num_pedido": 2, "ID_producto": 3, "cantidad": 1, "precio_unitario": 45.00 },
+        { "num_pedido": 2, "ID_producto": 5, "cantidad": 1, "precio_unitario": 35.50 },
+        { "num_pedido": 3, "ID_producto": 7, "cantidad": 1, "precio_unitario": 55.00 }
+    ]
+}
