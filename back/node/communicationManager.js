@@ -31,6 +31,17 @@ async function readDataFromJSON() {
     }
 }
 
+// Escribir en el archivo JSON
+async function writeDataToJSON(data) {
+    const filePath = path.join(__dirname, 'data.json');
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    } catch (error) {
+        console.error('Error al escribir en el archivo JSON:', error);
+        throw error;
+    }
+}
+
 // PRODUCTS
 
 // Obtener todos los productos
@@ -53,9 +64,28 @@ async function getProduct(id) {
 async function postProduct(productData) {
     try {
         const { nombre, descripcion, precio, stock } = productData;
+
+        // Inserción en la base de datos
         const [result] = await pool.query('INSERT INTO Producto (nombre, descripcion, precio, stock) VALUES (?, ?, ?, ?)', 
             [nombre, descripcion, precio, stock]);
-        return { id: result.insertId, ...productData };
+
+        // Leer el archivo JSON
+        const jsonData = await readDataFromJSON();
+
+        // Agregar el nuevo producto a la lista de productos
+        const newProduct = {
+            ID_producto: result.insertId, // Asegúrate de obtener el ID del nuevo producto
+            nombre,
+            descripcion,
+            precio,
+            stock
+        };
+        jsonData.productos.push(newProduct);
+
+        // Escribir de nuevo en el archivo JSON
+        await writeDataToJSON(jsonData);
+
+        return newProduct;
     } catch (error) {
         console.error('Error al insertar el producto:', error);
         throw error;
@@ -189,4 +219,3 @@ async function testDatabaseConnection() {
         console.error('Error al conectar con la base de datos:', error.message);
     }
 }
-

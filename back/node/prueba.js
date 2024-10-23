@@ -60,7 +60,25 @@ async function runTests() {
     await testGetProducts(); // Prueba obtener todos los productos
     await testGetUsers(); // Prueba obtener todos los usuarios
     await testGetOrders(); // Prueba obtener todas las órdenes
+   // await testInsertProduct();
 }
+
+// async function testInsertProduct() {
+//     const newProduct = {
+//         nombre: "Zapatos de Cuero",
+//         descripcion: "Zapatos de cuero genuino, elegantes y cómodos.",
+//         precio: 75.00,
+//         stock: 20
+//     };
+
+//     try {
+//         const result = await communicationManager.postProduct(newProduct);
+//         console.log('Producto insertado:', result);
+//     } catch (error) {
+//         console.error('Error al insertar el producto:', error.message);
+//     }
+// }
 
 // Ejecutar las pruebas
 runTests();
+
