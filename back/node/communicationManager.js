@@ -52,6 +52,17 @@ async function postProduct(productData) {
     }
 }
 
+// Obtener todos los usuarios
+async function getUsers() {
+    try {
+        const [rows] = await pool.query('SELECT * FROM Usuario'); // Cambia 'Usuario' si el nombre de tu tabla es diferente
+        return rows;
+    } catch (error) {
+        console.error('Error al obtener los usuarios:', error);
+        throw error;
+    }
+}
+
 // Actualizar un producto
 async function updateProduct(id, productData) {
     try {
@@ -164,6 +175,8 @@ const communicationManager = {
     postOrder,
     updateOrder,
     deleteOrder,
+    getUsers, 
+
 };
 
 export { communicationManager };
