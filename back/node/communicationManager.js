@@ -4,14 +4,14 @@ import mysql from 'mysql2/promise';
 
 // Crear conexión a la base de datos usando mysql2/promise
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'a24bermipre_TR1-G3',  // Nombre de tu base de datos
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'a24bermirpre',  // Usuario proporcionado
+    password: process.env.DB_PASSWORD || 'InstitutPedralbes_2024',  // Contraseña proporcionada
+    database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos en minúsculas
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+  });
 
 // PRODUCTS
 
@@ -168,3 +168,29 @@ const communicationManager = {
 
 export { communicationManager };
 
+async function testDatabaseConnection() {
+    try {
+        const connection = await pool.getConnection();
+        await connection.query('SELECT 1'); // Consulta simple para probar la conexión
+        console.log('Conexión a la base de datos exitosa');
+        connection.release(); // Libera la conexión después de la prueba
+    } catch (error) {
+        console.error('Error al conectar con la base de datos:', error.message);
+    }
+}
+
+
+// pruebas
+
+// Función para probar getOrders
+async function testGetOrders() {
+    try {
+        const orders = await getOrders(); // Llama a la función getOrders
+        console.log('Pedidos obtenidos:', orders); // Muestra los pedidos en la consola
+    } catch (error) {
+        console.error('Error al obtener los pedidos:', error.message);
+    }
+}
+
+// Llamar a la función de prueba para getOrders
+testGetOrders();
