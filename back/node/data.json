@@ -96,14 +96,8 @@
       "descripcion": "Zapatos de cuero genuino, elegantes y cómodos.",
       "precio": 75,
       "stock": 20
-    },
-    {
-      "ID_producto": 14,
-      "nombre": "Zapatos de Cuero",
-      "descripcion": "Zapatos de cuero genuino, elegantes y cómodos.",
-      "precio": 75,
-      "stock": 20
     }
+   
   ],
   "pedidos": [
     {
