@@ -2,10 +2,11 @@
 USE `a24bermipre_TR1-G3`;
 
 -- Insertar Usuarios
-INSERT INTO Usuario (nombre, correo, telefono) VALUES
-('Juan Pérez', 'juan.perez@example.com', '123456789'),
-('María López', 'maria.lopez@example.com', '987654321'),
-('Luis García', 'luis.garcia@example.com', '456123789');
+INSERT INTO Usuario (nombre, correo, telefono, contraseña) VALUES
+('Juan Pérez', 'juan.perez@example.com', '123456789', 'Ju4nPeRz2023'),
+('María López', 'maria.lopez@example.com', '987654321', 'Ma8rLoPez1987'),
+('Luis García', 'luis.garcia@example.com', '456123789', 'Lu1sGarCia2024');
+
 
 -- Insertar Productos
 INSERT INTO Producto (nombre, descripcion, precio, stock) VALUES
