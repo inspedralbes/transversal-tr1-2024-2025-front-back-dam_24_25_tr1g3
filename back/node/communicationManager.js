@@ -117,11 +117,27 @@ async function updateProduct(id, productData) {
 // Eliminar un producto
 async function deleteProduct(id) {
     try {
+        // Primero, eliminamos el producto de la base de datos
         const [result] = await pool.query('DELETE FROM Producto WHERE ID_producto = ?', [id]);
         if (result.affectedRows === 0) {
             throw new Error('Producto no encontrado');
         }
-        return { message: 'Producto eliminado correctamente' };
+
+        // Leer el archivo JSON
+        const jsonData = await readDataFromJSON();
+
+        // Filtrar los productos para eliminar el que coincide con el ID
+        const updatedProducts = jsonData.productos.filter(product => product.ID_producto !== id);
+
+        // Si el producto fue eliminado, actualizamos el archivo JSON
+        if (updatedProducts.length !== jsonData.productos.length) {
+            jsonData.productos = updatedProducts;
+            await writeDataToJSON(jsonData); // Escribir la lista actualizada en el archivo JSON
+            return { message: 'Producto eliminado correctamente tanto de la BD como del JSON' };
+        } else {
+            throw new Error('Producto no encontrado en el JSON');
+        }
+
     } catch (error) {
         console.error(`Error al eliminar el producto con ID ${id}:`, error);
         throw error;
@@ -205,6 +221,8 @@ const communicationManager = {
     updateOrder,
     deleteOrder,
     getUsers, 
+    readDataFromJSON, // Asegúrate de exportar estas funciones
+    writeDataToJSON   // Asegúrate de exportar estas funciones
 };
 
 export { communicationManager };
