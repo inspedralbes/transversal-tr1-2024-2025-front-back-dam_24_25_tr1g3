@@ -20,9 +20,10 @@ const port = process.env.PORT || 3000; // Usa PORT del archivo .env o 3000 por d
 // Conectar a la base de datos MySQL
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'a24bermirpre',  // Usuario proporcionado
+    port: 3306,
+    user: process.env.DB_USER || 'a24bermirpre_user',  // Usuario proporcionado
     password: process.env.DB_PASSWORD || 'InstitutPedralbes_2024',  // Contraseña proporcionada
-    database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos
+    database: process.env.DB_NAME || 'a24bermirpre_TR1-G3',  // Nombre de la base de datos
 };
 let connection;
 

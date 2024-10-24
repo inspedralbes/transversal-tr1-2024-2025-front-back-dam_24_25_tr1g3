@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 
 // Crear conexión a la base de datos usando mysql2/promise
 const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST || 'daw.inspedralbes.cat:8083',
     user: process.env.DB_USER || 'a24bermirpre',  // Usuario proporcionado
     password: process.env.DB_PASSWORD || 'InstitutPedralbes_2024',  // Contraseña proporcionada
     database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos
