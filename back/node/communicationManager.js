@@ -194,11 +194,40 @@ async function updateOrder(id, orderData) {
 // Eliminar una orden
 async function deleteOrder(id) {
     try {
+        // Primero, obtenemos los productos relacionados a la orden
+        const [productosRelacionados] = await pool.query('SELECT * FROM pedido_producto WHERE num_pedido = ?', [id]);
+
+        // Luego, eliminamos los registros relacionados en la tabla pedido_producto
+        await pool.query('DELETE FROM pedido_producto WHERE num_pedido = ?', [id]);
+
+        // Después, eliminamos el pedido de la tabla Pedido
         const [result] = await pool.query('DELETE FROM Pedido WHERE num_pedido = ?', [id]);
+        
         if (result.affectedRows === 0) {
             throw new Error('Pedido no encontrado');
         }
-        return { message: 'Pedido eliminado correctamente' };
+
+        // Leer el archivo JSON
+        const jsonData = await readDataFromJSON();
+
+        // Filtrar los pedidos para eliminar el que coincide con el ID
+        const updatedOrders = jsonData.pedidos.filter(order => order.num_pedido !== id);
+
+        // Si el pedido fue eliminado, actualizamos el archivo JSON
+        if (updatedOrders.length !== jsonData.pedidos.length) {
+            jsonData.pedidos = updatedOrders;
+
+            // Eliminar los productos relacionados del archivo JSON
+            for (const producto of productosRelacionados) {
+                jsonData.productos = jsonData.productos.filter(prod => prod.ID_producto !== producto.ID_producto);
+            }
+
+            await writeDataToJSON(jsonData); // Escribir la lista actualizada en el archivo JSON
+            return { message: 'Pedido eliminado correctamente junto con sus productos relacionados' };
+        } else {
+            throw new Error('Pedido no encontrado en el JSON');
+        }
+
     } catch (error) {
         console.error(`Error al eliminar el pedido con ID ${id}:`, error);
         throw error;

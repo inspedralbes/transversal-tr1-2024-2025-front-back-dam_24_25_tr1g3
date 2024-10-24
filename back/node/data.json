@@ -94,7 +94,7 @@
       "stock": 20
     },
     {
-      "ID_producto": 13,
+      "ID_producto": 11,
       "nombre": "Zapatos de Cuero",
       "descripcion": "Zapatos de cuero genuino, elegantes y cómodos.",
       "precio": 75,
@@ -107,53 +107,52 @@
       "ID_usuario": 1,
       "fecha": "2024-10-22 10:00:00",
       "total_pedido": 125.98,
-      "estado": "pendiente"
+      "estado": "pendiente",
+      "productos": [
+        {
+          "ID_producto": 1,
+          "cantidad": 2,
+          "precio_unitario": 25.99
+        },
+        {
+          "ID_producto": 2,
+          "cantidad": 1,
+          "precio_unitario": 39.99
+        }
+      ]
     },
     {
       "num_pedido": 2,
       "ID_usuario": 2,
       "fecha": "2024-10-22 11:30:00",
       "total_pedido": 85.5,
-      "estado": "completado"
+      "estado": "completado",
+      "productos": [
+        {
+          "ID_producto": 3,
+          "cantidad": 1,
+          "precio_unitario": 45
+        },
+        {
+          "ID_producto": 5,
+          "cantidad": 1,
+          "precio_unitario": 35.5
+        }
+      ]
     },
     {
       "num_pedido": 3,
       "ID_usuario": 3,
       "fecha": "2024-10-22 12:15:00",
       "total_pedido": 55,
-      "estado": "pendiente"
-    }
-  ],
-  "pedido_producto": [
-    {
-      "num_pedido": 1,
-      "ID_producto": 1,
-      "cantidad": 2,
-      "precio_unitario": 25.99
-    },
-    {
-      "num_pedido": 1,
-      "ID_producto": 2,
-      "cantidad": 1,
-      "precio_unitario": 39.99
-    },
-    {
-      "num_pedido": 2,
-      "ID_producto": 3,
-      "cantidad": 1,
-      "precio_unitario": 45
-    },
-    {
-      "num_pedido": 2,
-      "ID_producto": 5,
-      "cantidad": 1,
-      "precio_unitario": 35.5
-    },
-    {
-      "num_pedido": 3,
-      "ID_producto": 7,
-      "cantidad": 1,
-      "precio_unitario": 55
+      "estado": "pendiente",
+      "productos": [
+        {
+          "ID_producto": 7,
+          "cantidad": 1,
+          "precio_unitario": 55
+        }
+      ]
     }
   ]
 }

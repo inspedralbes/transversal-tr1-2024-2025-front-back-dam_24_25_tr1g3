@@ -168,20 +168,27 @@ app.put('/order/:id', async (req, res) => {
     }
 });
 
-app.delete('/order/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const result = await communicationManager.deleteOrder(Number(id)); // Convertir ID a número
+app.delete('/order/:num_pedido', async (req, res) => {
+    const { num_pedido } = req.params;
 
-        if (!result) {
-            return res.status(404).json({ error: 'Pedido no encontrado para eliminar' });
+    try {
+        // Eliminar primero los productos relacionados con el pedido
+        await db.query('DELETE FROM pedido_producto WHERE num_pedido = ?', [num_pedido]);
+
+        // Luego, eliminar el pedido
+        const result = await db.query('DELETE FROM Pedido WHERE num_pedido = ?', [num_pedido]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Pedido no encontrado" });
         }
 
-        res.json({ message: 'Pedido eliminado correctamente' });
+        return res.json({ message: "Pedido eliminado correctamente junto con sus productos relacionados" });
     } catch (error) {
-        res.status(500).json({ error: 'Error al eliminar el pedido' });
+        console.error('Error al eliminar el pedido:', error);
+        return res.status(500).json({ error: "Error al eliminar el pedido" });
     }
 });
+
 
 // ROUTES FOR USERS
 
