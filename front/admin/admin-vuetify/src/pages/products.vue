@@ -10,7 +10,7 @@
         <h2>Lista de Productos</h2>
         <ul>
           <li v-for="(product, index) in products" :key="index">
-            {{ product.nombre }}, {{ product.precio }}
+            {{ product.nombre }}, {{ product.precio }}€
             <hr>
           </li>
         </ul>
