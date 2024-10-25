@@ -4,7 +4,7 @@
         <v-card-title>
           <h1>Gestión de Pedidos</h1>
           <v-spacer></v-spacer>
-          <v-btn @click="openModalCreateOrder" color="primary">Crear Pedido</v-btn>
+          <v-btn @click="openModalCreateOrder" color="green">Crear Pedido</v-btn>
         </v-card-title>
   
         <v-divider></v-divider>

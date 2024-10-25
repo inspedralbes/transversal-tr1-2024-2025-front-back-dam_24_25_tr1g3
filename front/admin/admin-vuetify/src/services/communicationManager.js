@@ -17,7 +17,7 @@ async function getProducts() {
 // Obtener un producto por ID
 async function getProduct(id) {
   try {
-    const response = await fetch(`${URLbase}/products/${id}`);
+    const response = await fetch(`${URLbase}/product/${id}`); // Asegúrate de que la ruta sea /product/{id}
     if (!response.ok) throw new Error('Error en la red');
     return await response.json();
   } catch (error) {
@@ -28,7 +28,7 @@ async function getProduct(id) {
 // Crear un nuevo producto
 async function postProduct(productData) {
   try {
-    const response = await fetch(`${URLbase}/products`, {
+    const response = await fetch(`${URLbase}/product`, { // Cambié la ruta a /product
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(productData),
@@ -43,7 +43,7 @@ async function postProduct(productData) {
 // Actualizar un producto por ID
 async function updateProduct(id, productData) {
   try {
-    const response = await fetch(`${URLbase}/products/${id}`, {
+    const response = await fetch(`${URLbase}/product/${id}`, { // Cambié la ruta a /product/{id}
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(productData),
@@ -58,7 +58,7 @@ async function updateProduct(id, productData) {
 // Eliminar un producto por ID
 async function deleteProduct(id) {
   try {
-    const response = await fetch(`${URLbase}/products/${id}`, {
+    const response = await fetch(`${URLbase}/product/${id}`, { // Cambié la ruta a /product/{id}
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Error al eliminar producto');
@@ -75,9 +75,12 @@ async function getUsers() {
   try {
     const response = await fetch(`${URLbase}/users`);
     if (!response.ok) throw new Error('Error en la red');
-    return await response.json();
+    const data = await response.json();
+    console.log('Datos de usuarios:', data); // Imprimir los datos recibidos
+    return data;
   } catch (error) {
     console.error('Error al obtener usuarios:', error);
+    return []; // Retornar un array vacío en caso de error
   }
 }
 
@@ -97,7 +100,7 @@ async function getOrders() {
 // Obtener una orden por ID
 async function getOrder(id) {
   try {
-    const response = await fetch(`${URLbase}/orders/${id}`);
+    const response = await fetch(`${URLbase}/order/${id}`); // Cambié la ruta a /order/{id}
     if (!response.ok) throw new Error('Error en la red');
     return await response.json();
   } catch (error) {
@@ -108,7 +111,7 @@ async function getOrder(id) {
 // Crear una nueva orden
 async function postOrder(orderData) {
   try {
-    const response = await fetch(`${URLbase}/orders`, {
+    const response = await fetch(`${URLbase}/order`, { // Cambié la ruta a /order
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(orderData),
@@ -123,7 +126,7 @@ async function postOrder(orderData) {
 // Actualizar una orden por ID
 async function updateOrder(id, orderData) {
   try {
-    const response = await fetch(`${URLbase}/orders/${id}`, {
+    const response = await fetch(`${URLbase}/order/${id}`, { // Cambié la ruta a /order/{id}
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(orderData),
@@ -138,7 +141,7 @@ async function updateOrder(id, orderData) {
 // Eliminar una orden por ID
 async function deleteOrder(id) {
   try {
-    const response = await fetch(`${URLbase}/orders/${id}`, {
+    const response = await fetch(`${URLbase}/order/${id}`, { // Cambié la ruta a /order/{id}
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Error al eliminar orden');
@@ -149,7 +152,6 @@ async function deleteOrder(id) {
 }
 
 // EXPORTAR LOS MÉTODOS
-
 const communicationManager = {
   // Products
   getProducts,

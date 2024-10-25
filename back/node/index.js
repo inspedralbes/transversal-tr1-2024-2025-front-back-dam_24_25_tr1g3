@@ -22,7 +22,7 @@ const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'a24bermirpre',  // Usuario proporcionado
     password: process.env.DB_PASSWORD || 'InstitutPedralbes_2024',  // Contraseña proporcionada
-    database: process.env.DB_NAME || 'a24bermirpre_TR1-G3',  // Nombre de la base de datos
+    database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos
 };
 let connection;
 
@@ -42,11 +42,13 @@ io.on('connection', (socket) => {
         console.log('Mensaje recibido:', msg);
         socket.emit('respuesta', 'Mensaje recibido en el servidor');
     });
-
+ 
     socket.on('disconnect', () => {
         console.log('Un usuario se ha desconectado');
     });
 });
+
+// 
 
 // ROUTES FOR PRODUCTS
 
@@ -172,23 +174,13 @@ app.delete('/order/:num_pedido', async (req, res) => {
     const { num_pedido } = req.params;
 
     try {
-        // Eliminar primero los productos relacionados con el pedido
-        await db.query('DELETE FROM pedido_producto WHERE num_pedido = ?', [num_pedido]);
-
-        // Luego, eliminar el pedido
-        const result = await db.query('DELETE FROM Pedido WHERE num_pedido = ?', [num_pedido]);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: "Pedido no encontrado" });
-        }
-
-        return res.json({ message: "Pedido eliminado correctamente junto con sus productos relacionados" });
+        const result = await communicationManager.deleteOrder(num_pedido); // Cambiar a comunicación a la base de datos
+        res.json({ message: result.message });
     } catch (error) {
         console.error('Error al eliminar el pedido:', error);
         return res.status(500).json({ error: "Error al eliminar el pedido" });
     }
 });
-
 
 // ROUTES FOR USERS
 
@@ -204,8 +196,7 @@ app.get('/users', async (req, res) => {
 app.get('/user/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const users = await communicationManager.getUsers();
-        const user = users.find(u => u.ID_usuario === Number(id)); // Convertir ID a número
+        const user = await communicationManager.getUser(Number(id)); // Convertir ID a número
 
         if (!user) {
             return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -220,12 +211,7 @@ app.get('/user/:id', async (req, res) => {
 app.post('/user', async (req, res) => {
     try {
         const userData = req.body;
-        const users = await communicationManager.getUsers();
-        const newId = users.length ? Math.max(users.map(u => u.ID_usuario)) + 1 : 1; // Generar nuevo ID
-        const newUser = { ID_usuario: newId, ...userData };
-        users.push(newUser); // Agregar nuevo usuario a la lista
-
-        await communicationManager.writeDataToJSON({ usuarios: users }); // Guardar cambios en JSON
+        const newUser = await communicationManager.postUser(userData);
         res.status(201).json(newUser); // 201: Creado
     } catch (error) {
         res.status(500).json({ error: 'Error al crear el usuario' });
@@ -236,17 +222,13 @@ app.put('/user/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const userData = req.body; // Nuevos datos del usuario
-        const users = await communicationManager.getUsers();
-        const userIndex = users.findIndex(u => u.ID_usuario === Number(id)); // Convertir ID a número
+        const updatedUser = await communicationManager.updateUser(Number(id), userData); // Convertir ID a número
 
-        if (userIndex === -1) {
+        if (!updatedUser) {
             return res.status(404).json({ error: 'Usuario no encontrado para actualizar' });
         }
 
-        users[userIndex] = { ID_usuario: Number(id), ...userData }; // Actualizar el usuario
-
-        await communicationManager.writeDataToJSON({ usuarios: users }); // Guardar cambios en JSON
-        res.json(users[userIndex]); // Enviar el usuario actualizado
+        res.json(updatedUser); // Enviar el usuario actualizado
     } catch (error) {
         res.status(500).json({ error: 'Error al actualizar el usuario' });
     }
@@ -255,27 +237,23 @@ app.put('/user/:id', async (req, res) => {
 app.delete('/user/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const users = await communicationManager.getUsers();
-        const userIndex = users.findIndex(u => u.ID_usuario === Number(id)); // Convertir ID a número
+        const result = await communicationManager.deleteUser(Number(id)); // Convertir ID a número
 
-        if (userIndex === -1) {
+        if (!result) {
             return res.status(404).json({ error: 'Usuario no encontrado para eliminar' });
         }
 
-        users.splice(userIndex, 1); // Eliminar usuario
-
-        await communicationManager.writeDataToJSON({ usuarios: users }); // Guardar cambios en JSON
         res.json({ message: 'Usuario eliminado correctamente' });
     } catch (error) {
         res.status(500).json({ error: 'Error al eliminar el usuario' });
     }
 });
 
+
 app.get('/', (req, res) => {
-    res.send('¡Hola, mundo con WebSockets y CORS habilitado!');
+    res.send('¡Bienvenido a la API del proyecto!');
 });
 
-// Iniciar el servidor
 server.listen(port, () => {
-    console.log(`Servidor escuchando en http://localhost:${port}`);
+    console.log(`Servidor corriendo en http://localhost:${port}`);
 });

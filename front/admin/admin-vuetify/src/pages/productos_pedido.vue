@@ -37,9 +37,7 @@
   
   onMounted(async () => {
     try {
-      // Aquí debes llamar a tu API para obtener los productos en pedido
-      // Asegúrate de tener esta función en tu communicationManager
-      productosPedido.value = await communicationManager.getProductosPedido(); 
+      productosPedido.value = await communicationManager.getOrder(); // Debes implementar esta función
     } catch (error) {
       console.error('No se pudieron cargar los productos en pedido:', error);
     }

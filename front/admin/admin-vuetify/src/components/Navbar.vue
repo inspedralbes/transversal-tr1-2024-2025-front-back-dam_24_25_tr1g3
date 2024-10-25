@@ -6,6 +6,7 @@
       <v-btn to="/products" text>Productos</v-btn>
       <v-btn to="/users" text>Usuarios</v-btn>
       <v-btn to="/orders" text>Pedidos</v-btn>
+
     </v-app-bar>
   </template>
   
