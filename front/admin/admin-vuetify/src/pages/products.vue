@@ -13,12 +13,24 @@
         <v-list v-if="products.length">
           <v-list-item v-for="(product, index) in products" :key="index">
             <v-list-item-content>
+              <v-list-item-title>ID: {{ product.ID_producto }}</v-list-item-title>
               <v-list-item-title>{{ product.nombre }}</v-list-item-title>
+              <v-list-item-subtitle>{{ product.descripcion }}</v-list-item-subtitle>
               <v-list-item-subtitle>{{ product.precio }}€</v-list-item-subtitle>
+              <v-list-item-subtitle>Stock: {{ product.stock }}</v-list-item-subtitle>
+              <v-list-item-subtitle>
+                <v-img
+                  :src="product.imagen"
+                  max-width="200"
+                  max-height="200"
+                  contain
+                  :alt="`Imagen de ${product.nombre}`"
+                ></v-img>
+              </v-list-item-subtitle>
             </v-list-item-content>
             <v-list-item-action>
-              <v-btn @click="openModalEditProduct(product)" color="purple">Editar</v-btn>
-              <v-btn @click="deleteProduct(product.id)" color="red">Eliminar</v-btn>
+              <v-btn @click="openModalEditProduct(product)" color="blue">Editar</v-btn>
+              <v-btn @click="deleteProduct(product.ID_producto)" color="red">Eliminar</v-btn>
             </v-list-item-action>
           </v-list-item>
         </v-list>
@@ -33,7 +45,10 @@
         </v-card-title>
         <v-card-text>
           <v-text-field v-model="newProduct.nombre" label="Nombre del Producto" />
+          <v-text-field v-model="newProduct.descripcion" label="Descripción" />
           <v-text-field v-model="newProduct.precio" label="Precio" type="number" />
+          <v-text-field v-model="newProduct.stock" label="Stock" type="number" />
+          <v-text-field v-model="newProduct.imagen" label="URL de la Imagen" />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -51,7 +66,10 @@
         </v-card-title>
         <v-card-text>
           <v-text-field v-model="selectedProduct.nombre" label="Nombre del Producto" />
+          <v-text-field v-model="selectedProduct.descripcion" label="Descripción" />
           <v-text-field v-model="selectedProduct.precio" label="Precio" type="number" />
+          <v-text-field v-model="selectedProduct.stock" label="Stock" type="number" />
+          <v-text-field v-model="selectedProduct.imagen" label="URL de la Imagen" />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -72,11 +90,11 @@ const isModalCreateProductOpen = ref(false);
 const isModalEditProductOpen = ref(false);
 const products = ref([]);
 const selectedProduct = ref({});
-const newProduct = ref({ nombre: '', precio: '' }); // Inicializamos el nuevo producto
+const newProduct = ref({ nombre: '', descripcion: '', precio: '', stock: '', imagen: '' }); // Inicializamos el nuevo producto
 
 // Abrir modal para crear producto
 const openModalCreateProduct = () => {
-  newProduct.value = { nombre: '', precio: '' }; // Reiniciar el nuevo producto
+  newProduct.value = { nombre: '', descripcion: '', precio: '', stock: '', imagen: '' }; // Reiniciar el nuevo producto
   isModalCreateProductOpen.value = true;
 };
 
@@ -124,7 +142,11 @@ const createProduct = async () => {
 // Función para actualizar el producto
 const updateProduct = async () => {
   try {
-    await communicationManager.updateProduct(selectedProduct.value.id, selectedProduct.value);
+    if (!selectedProduct.value.ID_producto) {
+      console.error('El ID del producto no está definido.');
+      return;
+    }
+    await communicationManager.updateProduct(selectedProduct.value.ID_producto, selectedProduct.value);
     await fetchProducts(); // Refrescar la lista de productos
     closeModalEditProduct();
   } catch (error) {

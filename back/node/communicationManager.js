@@ -56,9 +56,11 @@ async function postProduct(productData) {
 // Actualizar un producto
 async function updateProduct(id, productData) {
     try {
-        const { nombre, descripcion, precio, stock } = productData;
-        const [result] = await pool.query('UPDATE Producto SET nombre = ?, descripcion = ?, precio = ?, stock = ? WHERE ID_producto = ?', 
-            [nombre, descripcion, precio, stock, id]);
+        const { nombre, descripcion, precio, stock, imagen } = productData; 
+        const [result] = await pool.query(
+            'UPDATE Producto SET nombre = ?, descripcion = ?, precio = ?, stock = ?, imagen = ? WHERE ID_producto = ?',
+            [nombre, descripcion, precio, stock, imagen, id] 
+        );
         if (result.affectedRows === 0) {
             throw new Error('Producto no encontrado');
         }
