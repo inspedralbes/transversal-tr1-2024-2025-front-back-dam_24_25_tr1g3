@@ -1,7 +1,7 @@
 <!-- src/components/Navbar.vue -->
 <template>
     <v-app-bar app color="primary" dark>
-      <v-toolbar-title>Gestión de Inventario</v-toolbar-title>
+      <v-toolbar-title>Gestión de Inventario BADM</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn to="/products" text>Productos</v-btn>
       <v-btn to="/users" text>Usuarios</v-btn>
