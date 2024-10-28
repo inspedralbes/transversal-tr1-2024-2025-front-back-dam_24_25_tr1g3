@@ -103,17 +103,40 @@ async function getOrder(id) {
 }
 
 // Insertar una nueva orden
+// Insertar una nueva orden
 async function postOrder(orderData) {
+    const connection = await pool.getConnection(); // Obtener una conexión del pool
     try {
-        const { ID_usuario, fecha, total_pedido, estado } = orderData;
-        const [result] = await pool.query('INSERT INTO Pedido (ID_usuario, fecha, total_pedido, estado) VALUES (?, ?, ?, ?)', 
-            [ID_usuario, fecha, total_pedido, estado]);
-        return { id: result.insertId, ...orderData };
+        await connection.beginTransaction(); // Iniciar la transacción
+
+        const { ID_usuario, fecha, total_pedido, estado, productos } = orderData; // Obtener datos del pedido
+        const [result] = await connection.query(
+            'INSERT INTO Pedido (ID_usuario, fecha, total_pedido, estado) VALUES (?, ?, ?, ?)', 
+            [ID_usuario, fecha, total_pedido, estado]
+        );
+
+        const num_pedido = result.insertId; // Obtener el ID del nuevo pedido
+
+        // Insertar los productos en Pedido_Producto
+        for (const producto of productos) {
+            const { ID_producto, cantidad, precio_unitario } = producto; // Desestructurar los datos del producto
+            await connection.query(
+                'INSERT INTO Pedido_Producto (num_pedido, ID_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)', 
+                [num_pedido, ID_producto, cantidad, precio_unitario]
+            );
+        }
+
+        await connection.commit(); // Confirmar la transacción
+        return { num_pedido, ID_usuario, fecha, total_pedido, estado, productos }; // Retornar datos del pedido creado
     } catch (error) {
+        await connection.rollback(); // Revertir la transacción en caso de error
         console.error('Error al insertar el pedido:', error);
         throw error;
+    } finally {
+        connection.release(); // Liberar la conexión
     }
 }
+
 
 // Actualizar una orden
 async function updateOrder(id, orderData) {
@@ -150,6 +173,22 @@ async function getUsers() {
     return users; // Devolver la lista de usuarios de la base de datos
 }
 
+// Obtener productos en un pedido específico
+async function getOrderProducts(num_pedido) {
+    const [productos] = await pool.query(`
+        SELECT pp.ID_producto, p.nombre, pp.cantidad, pp.precio_unitario
+        FROM Pedido_Producto pp
+        JOIN Producto p ON pp.ID_producto = p.ID_producto
+        WHERE pp.num_pedido = ?
+    `, [num_pedido]);
+
+    if (productos.length === 0) {
+        throw new Error('No se encontraron productos para el pedido especificado');
+    }
+
+    return productos; // Devolver la lista de productos del pedido
+}
+
 // Objeto que contiene todas las funciones para manejar productos y pedidos
 const communicationManager = {
     // PRODUCTS
@@ -158,7 +197,7 @@ const communicationManager = {
     postProduct,
     updateProduct,
     deleteProduct,
-
+    getOrderProducts,
     // ORDERS
     getOrders,
     getOrder,

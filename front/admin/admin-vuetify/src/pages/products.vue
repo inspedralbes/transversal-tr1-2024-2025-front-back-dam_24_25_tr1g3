@@ -10,15 +10,19 @@
       <v-divider></v-divider>
 
       <v-card-text>
-        <v-list v-if="products.length">
-          <v-list-item v-for="(product, index) in products" :key="index">
-            <v-list-item-content>
-              <v-list-item-title>ID: {{ product.ID_producto }}</v-list-item-title>
-              <v-list-item-title>{{ product.nombre }}</v-list-item-title>
-              <v-list-item-subtitle>{{ product.descripcion }}</v-list-item-subtitle>
-              <v-list-item-subtitle>{{ product.precio }}€</v-list-item-subtitle>
-              <v-list-item-subtitle>Stock: {{ product.stock }}</v-list-item-subtitle>
-              <v-list-item-subtitle>
+        <v-row>
+          <v-col
+            v-for="(product, index) in products"
+            :key="index"
+            cols="12" md="4" lg="3"
+          >
+            <v-card>
+              <v-card-title>{{ product.nombre }}</v-card-title>
+              <v-card-subtitle>ID: {{ product.ID_producto }}</v-card-subtitle>
+              <v-card-text>
+                <p>{{ product.descripcion }}</p>
+                <p>Precio: {{ product.precio }}€</p>
+                <p>Stock: {{ product.stock }}</p>
                 <v-img
                   :src="product.imagen"
                   max-width="200"
@@ -26,12 +30,17 @@
                   contain
                   :alt="`Imagen de ${product.nombre}`"
                 ></v-img>
-              </v-list-item-subtitle>
-            </v-list-item-content>
-            <v-list-item-action>
-              <v-btn @click="openModalEditProduct(product)" color="blue">Editar</v-btn>
-              <v-btn @click="deleteProduct(product.ID_producto)" color="red">Eliminar</v-btn>
-            </v-list-item-action>
+              </v-card-text>
+              <v-card-actions>
+                <v-btn @click="openModalEditProduct(product)" color="blue">Editar</v-btn>
+                <v-btn @click="deleteProduct(product.ID_producto)" color="red">Eliminar</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+        </v-row>
+        <v-list v-if="products.length === 0">
+          <v-list-item>
+            <v-list-item-content>No hay productos registrados.</v-list-item-content>
           </v-list-item>
         </v-list>
       </v-card-text>
@@ -78,7 +87,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
   </v-container>
 </template>
 

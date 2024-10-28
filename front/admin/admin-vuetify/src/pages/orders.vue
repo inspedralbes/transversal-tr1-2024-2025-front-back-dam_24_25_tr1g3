@@ -39,7 +39,29 @@
         <v-card-text>
           <v-text-field v-model="newOrder.ID_usuario" label="ID Usuario" type="number" />
           <v-text-field v-model="newOrder.total_pedido" label="Total del Pedido" type="number" />
-          <v-text-field v-model="newOrder.estado" label="Estado" />
+          
+          <!-- Cambiado a v-select para el estado -->
+          <v-select
+            v-model="newOrder.estado"
+            :items="['Pendiente', 'Completado']"
+            label="Estado"
+            required
+          />
+
+          <!-- Sección para añadir productos -->
+          <v-divider></v-divider>
+          <h3>Productos</h3>
+          <div v-for="(producto, index) in newOrder.productos" :key="index">
+            <v-card>
+              <v-card-text>
+                <v-text-field v-model="producto.ID_producto" label="ID Producto" type="number" />
+                <v-text-field v-model="producto.cantidad" label="Cantidad" type="number" />
+                <v-text-field v-model="producto.precio_unitario" label="Precio Unitario" type="number" />
+                <v-btn @click="removeProduct(index)" color="red">Eliminar Producto</v-btn>
+              </v-card-text>
+            </v-card>
+          </div>
+          <v-btn @click="addProduct" color="blue">Agregar Producto</v-btn>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -58,7 +80,14 @@
         <v-card-text>
           <v-text-field v-model="selectedOrder.ID_usuario" label="ID Usuario" type="number" />
           <v-text-field v-model="selectedOrder.total_pedido" label="Total del Pedido" type="number" />
-          <v-text-field v-model="selectedOrder.estado" label="Estado" />
+          
+          <!-- Cambiado a v-select para el estado -->
+          <v-select
+            v-model="selectedOrder.estado"
+            :items="['Pendiente', 'Completado']"
+            label="Estado"
+            required
+          />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -77,12 +106,12 @@ import { communicationManager } from '@/services/communicationManager.js';
 const isModalCreateOrderOpen = ref(false);
 const isModalEditOrderOpen = ref(false);
 const orders = ref([]);
-const newOrder = ref({ ID_usuario: '', total_pedido: '', estado: '' });
+const newOrder = ref({ ID_usuario: '', total_pedido: '', estado: '', productos: [] });
 const selectedOrder = ref({});
 
 // Abrir modal para crear un nuevo pedido
 const openModalCreateOrder = () => {
-  newOrder.value = { ID_usuario: '', total_pedido: '', estado: '' };
+  newOrder.value = { ID_usuario: '', total_pedido: '', estado: '', productos: [] };
   isModalCreateOrderOpen.value = true;
 };
 
@@ -114,6 +143,16 @@ const fetchOrders = async () => {
   } catch (error) {
     console.error('No se pudieron cargar los pedidos:', error);
   }
+};
+
+// Función para añadir un producto a la lista
+const addProduct = () => {
+  newOrder.value.productos.push({ ID_producto: '', cantidad: '', precio_unitario: '' });
+};
+
+// Función para eliminar un producto de la lista
+const removeProduct = (index) => {
+  newOrder.value.productos.splice(index, 1);
 };
 
 // Función para crear un nuevo pedido

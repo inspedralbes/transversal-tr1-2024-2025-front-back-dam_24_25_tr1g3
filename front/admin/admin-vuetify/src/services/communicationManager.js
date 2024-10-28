@@ -123,6 +123,7 @@ async function postOrder(orderData) {
   }
 }
 
+
 // Actualizar una orden por ID
 async function updateOrder(id, orderData) {
   try {
@@ -150,6 +151,55 @@ async function deleteOrder(id) {
     console.error(`Error al eliminar la orden ${id}:`, error);
   }
 }
+async function getOrderProducts(orderId) {
+  try {
+    const response = await fetch(`${URLbase}/order/${orderId}/products`);
+    if (!response.ok) throw new Error('Error en la red');
+    const data = await response.json();
+    return data; // Debe devolver el array de productos de la orden
+  } catch (error) {
+    console.error(`Error al obtener los productos del pedido ${orderId}:`, error);
+  }
+}
+
+async function crearPedido() {
+  const orderData = {
+      ID_usuario: 1,
+      fecha: new Date().toISOString().slice(0, 19).replace('T', ' '), // Formatear la fecha
+      total_pedido: 50.00,
+      estado: "Pendiente",
+      productos: [
+          {
+              ID_producto: 1,
+              cantidad: 2,
+              precio_unitario: 10.00
+          },
+          {
+              ID_producto: 2,
+              cantidad: 1,
+              precio_unitario: 30.00
+          }
+      ]
+  };
+
+  try {
+      const response = await fetch(`${URLbase}/order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+      });
+
+      if (!response.ok) {
+          throw new Error('Error al crear el pedido');
+      }
+
+      const data = await response.json();
+      console.log('Pedido creado:', data);
+  } catch (error) {
+      console.error('Error:', error);
+  }
+}
+
 
 // EXPORTAR LOS MÉTODOS
 const communicationManager = {
@@ -169,6 +219,8 @@ const communicationManager = {
   postOrder,
   updateOrder,
   deleteOrder,
+  getOrderProducts,
+  crearPedido
 };
 
 export { communicationManager };
