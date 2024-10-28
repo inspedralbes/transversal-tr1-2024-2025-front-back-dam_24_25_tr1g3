@@ -205,44 +205,7 @@ async function getOrderProducts(orderId) {
   }
 }
 
-// Crear un pedido (Ejemplo)
-async function crearPedido() {
-  const orderData = {
-    ID_usuario: 1,
-    fecha: new Date().toISOString().slice(0, 19).replace('T', ' '), // Formatear la fecha
-    total_pedido: 50.00,
-    estado: "Pendiente",
-    productos: [
-      {
-        ID_producto: 1,
-        cantidad: 2,
-        precio_unitario: 10.00
-      },
-      {
-        ID_producto: 2,
-        cantidad: 1,
-        precio_unitario: 30.00
-      }
-    ]
-  };
 
-  try {
-    const response = await fetch(`${URLbase}/order`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData)
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al crear el pedido');
-    }
-
-    const data = await response.json();
-    console.log('Pedido creado:', data);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
 
 // EXPORTAR LOS MÉTODOS
 const communicationManager = {
@@ -266,7 +229,6 @@ const communicationManager = {
   updateOrder,
   deleteOrder,
   getOrderProducts,
-  crearPedido
 };
 
 export { communicationManager };

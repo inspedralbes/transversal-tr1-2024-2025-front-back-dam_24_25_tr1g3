@@ -253,6 +253,8 @@ async function deleteOrder(id) {
     }
 }
 
+
+
 // Obtener productos en un pedido específico
 async function getOrderProducts(num_pedido) {
     const [productos] = await pool.query(`
@@ -269,6 +271,20 @@ async function getOrderProducts(num_pedido) {
     return productos; // Devolver la lista de productos del pedido
 }
 
+// Eliminar productos de un pedido específico
+async function deleteOrderProduct(num_pedido, ID_producto) {
+    try {
+        const [result] = await pool.query('DELETE FROM Pedido_Producto WHERE num_pedido = ? AND ID_producto = ?', [num_pedido, ID_producto]);
+        if (result.affectedRows === 0) {
+            throw new Error('Producto no encontrado en el pedido');
+        }
+        return { message: 'Producto eliminado correctamente del pedido' };
+    } catch (error) {
+        console.error(`Error al eliminar el producto del pedido con num_pedido ${num_pedido}:`, error);
+        throw error;
+    }
+}
+
 // Objeto que contiene todas las funciones para manejar productos y pedidos
 const communicationManager = {
     // PRODUCTS
@@ -278,6 +294,7 @@ const communicationManager = {
     updateProduct,
     deleteProduct,
     getOrderProducts,
+    deleteOrderProduct, // Agregar la función de eliminación
     // ORDERS
     getOrders,
     getOrder,

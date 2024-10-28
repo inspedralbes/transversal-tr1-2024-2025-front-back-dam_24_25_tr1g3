@@ -256,6 +256,61 @@ app.delete('/user/:id', async (req, res) => {
     }
 });
 
+// ROUTES FOR ORDER PRODUCTS
+
+// Obtener productos en un pedido específico
+app.get('/order/:num_pedido/products', async (req, res) => {
+    const { num_pedido } = req.params;
+    try {
+        const products = await communicationManager.getOrderProducts(num_pedido);
+        res.json(products); // Enviar productos como JSON
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al obtener productos del pedido' });
+    }
+});
+
+// Eliminar un producto de un pedido específico
+app.delete('/order/:num_pedido/product/:id_producto', async (req, res) => {
+    const { num_pedido, id_producto } = req.params;
+    try {
+        const result = await communicationManager.deleteOrderProduct(num_pedido, id_producto);
+        res.json(result); // Enviar mensaje de éxito
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al eliminar el producto del pedido' });
+    }
+});
+
+// ROUTE FOR LOGIN
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        // Consulta a la base de datos para encontrar el usuario
+        const [users] = await connection.execute('SELECT * FROM users WHERE username = ?', [username]);
+
+        // Verificar si el usuario existe
+        if (users.length === 0) {
+            return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+        }
+
+        const user = users[0];
+
+        // Aquí deberías verificar la contraseña. Este es un ejemplo simple.
+        // Asegúrate de usar un método de hash seguro (como bcrypt) en un entorno de producción.
+        if (user.password !== password) {
+            return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+        }
+
+        // Si las credenciales son correctas, puedes devolver una respuesta de éxito
+        res.json({ message: 'Inicio de sesión exitoso', user: { id: user.id, username: user.username } });
+    } catch (error) {
+        console.error('Error en el inicio de sesión:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
 
 app.get('/', (req, res) => {
     res.send('¡Bienvenido a la API del proyecto!');

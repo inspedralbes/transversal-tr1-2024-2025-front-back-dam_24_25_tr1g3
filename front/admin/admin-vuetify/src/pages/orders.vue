@@ -10,23 +10,19 @@
       <v-divider></v-divider>
 
       <v-card-text>
-        <v-list v-if="orders.length">
-          <v-list-item v-for="(order, index) in orders" :key="index">
-            <v-list-item-content>
-              <v-list-item-title>Pedido N° {{ order.num_pedido }} (ID Usuario: {{ order.ID_usuario }})</v-list-item-title>
-              <v-list-item-subtitle>Total: {{ order.total_pedido }}€ - Estado: {{ order.estado }}</v-list-item-subtitle>
-            </v-list-item-content>
-            <v-list-item-action>
-              <v-btn @click="openModalEditOrder(order)" color="blue">Editar</v-btn>
-              <v-btn @click="deleteOrder(order.num_pedido)" color="red">Eliminar</v-btn>
-            </v-list-item-action>
-          </v-list-item>
-        </v-list>
-        <v-list v-else>
-          <v-list-item>
-            <v-list-item-content>No hay pedidos registrados.</v-list-item-content>
-          </v-list-item>
-        </v-list>
+        <v-data-table
+          :headers="headers"
+          :items="orders"
+          class="elevation-1"
+          item-key="num_pedido"
+          no-data-text="No hay pedidos registrados."
+        >
+          <!-- Template para la columna de acciones -->
+          <template v-slot:item.acciones="{ item }">
+            <v-btn @click="openModalEditOrder(item)" color="blue" small>Editar</v-btn>
+            <v-btn @click="deleteOrder(item.num_pedido)" color="red" small>Eliminar</v-btn>
+          </template>
+        </v-data-table>
       </v-card-text>
     </v-card>
 
@@ -39,8 +35,6 @@
         <v-card-text>
           <v-text-field v-model="newOrder.ID_usuario" label="ID Usuario" type="number" />
           <v-text-field v-model="newOrder.total_pedido" label="Total del Pedido" type="number" />
-          
-          <!-- Cambiado a v-select para el estado -->
           <v-select
             v-model="newOrder.estado"
             :items="['Pendiente', 'Completado']"
@@ -80,8 +74,6 @@
         <v-card-text>
           <v-text-field v-model="selectedOrder.ID_usuario" label="ID Usuario" type="number" />
           <v-text-field v-model="selectedOrder.total_pedido" label="Total del Pedido" type="number" />
-          
-          <!-- Cambiado a v-select para el estado -->
           <v-select
             v-model="selectedOrder.estado"
             :items="['Pendiente', 'Completado']"
@@ -108,6 +100,16 @@ const isModalEditOrderOpen = ref(false);
 const orders = ref([]);
 const newOrder = ref({ ID_usuario: '', total_pedido: '', estado: '', productos: [] });
 const selectedOrder = ref({});
+
+// Encabezados de la tabla
+const headers = [
+  { text: 'Número de Pedido', value: 'num_pedido' },
+  { text: 'ID Usuario', value: 'ID_usuario' },
+  { text: 'Fecha', value: 'fecha' },
+  { text: 'Total', value: 'total_pedido' },
+  { text: 'Estado', value: 'estado' },
+  { text: 'Acciones', value: 'acciones', align: 'end', sortable: false },
+];
 
 // Abrir modal para crear un nuevo pedido
 const openModalCreateOrder = () => {
@@ -157,11 +159,10 @@ const removeProduct = (index) => {
 
 // Función para crear un nuevo pedido
 const createOrder = async () => {
-  // Asignar la fecha actual al nuevo pedido
-  newOrder.value.fecha = new Date().toISOString(); // ISO 8601 format
+  newOrder.value.fecha = new Date().toISOString();
   try {
     const order = await communicationManager.postOrder(newOrder.value);
-    orders.value.push(order); // Agregar el nuevo pedido a la lista
+    orders.value.push(order);
     closeModalCreateOrder();
   } catch (error) {
     console.error('Error al crear el pedido:', error);
@@ -178,7 +179,7 @@ const updateOrder = async () => {
     const updatedOrder = await communicationManager.updateOrder(selectedOrder.value.num_pedido, selectedOrder.value);
     const index = orders.value.findIndex(order => order.num_pedido === updatedOrder.num_pedido);
     if (index !== -1) {
-      orders.value[index] = updatedOrder; // Actualizar el pedido en la lista
+      orders.value[index] = updatedOrder;
     }
     closeModalEditOrder();
   } catch (error) {
@@ -192,7 +193,7 @@ const deleteOrder = async (id) => {
   if (confirmDelete) {
     try {
       await communicationManager.deleteOrder(id);
-      orders.value = orders.value.filter(order => order.num_pedido !== id); // Eliminar el pedido de la lista
+      orders.value = orders.value.filter(order => order.num_pedido !== id);
     } catch (error) {
       console.error('Error al eliminar el pedido:', error);
     }
