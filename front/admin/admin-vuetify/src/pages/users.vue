@@ -37,10 +37,10 @@
           <span class="headline">Crear Usuario</span>
         </v-card-title>
         <v-card-text>
-          <v-text-field v-model="newUser.nombre" label="Nombre" />
-          <v-text-field v-model="newUser.correo" label="Correo" type="email" />
-          <v-text-field v-model="newUser.telefono" label="Teléfono" />
-          <v-text-field v-model="newUser.contraseña" label="Contraseña" type="password" />
+          <v-text-field v-model="newUser.nombre" label="Nombre" required />
+          <v-text-field v-model="newUser.correo" label="Correo" type="email" required />
+          <v-text-field v-model="newUser.telefono" label="Teléfono" required />
+          <v-text-field v-model="newUser.contraseña" label="Contraseña" type="password" required />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -57,10 +57,10 @@
           <span class="headline">Editar Usuario</span>
         </v-card-title>
         <v-card-text>
-          <v-text-field v-model="selectedUser.nombre" label="Nombre" />
-          <v-text-field v-model="selectedUser.correo" label="Correo" type="email" />
-          <v-text-field v-model="selectedUser.telefono" label="Teléfono" />
-          <v-text-field v-model="selectedUser.contraseña" label="Contraseña" type="password" />
+          <v-text-field v-model="selectedUser.nombre" label="Nombre" required />
+          <v-text-field v-model="selectedUser.correo" label="Correo" type="email" required />
+          <v-text-field v-model="selectedUser.telefono" label="Teléfono" required />
+          <v-text-field v-model="selectedUser.contraseña" label="Contraseña" type="password" required />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -95,7 +95,7 @@ const closeModalCreateUser = () => {
 
 // Abrir modal para editar un usuario
 const openModalEditUser = (user) => {
-  selectedUser.value = { ...user };
+  selectedUser.value = { ...user }; // Hacemos una copia del usuario
   isModalEditUserOpen.value = true;
 };
 
@@ -113,7 +113,6 @@ onMounted(async () => {
 const fetchUsers = async () => {
   try {
     const data = await communicationManager.getUsers();
-    console.log('Datos de usuarios:', data); // Verificar la estructura de datos
     users.value = Array.isArray(data) ? data : []; // Asegúrate de que sea un array
   } catch (error) {
     console.error('No se pudieron cargar los usuarios:', error);
@@ -123,21 +122,34 @@ const fetchUsers = async () => {
 // Función para crear un nuevo usuario
 const createUser = async () => {
   try {
+    if (!newUser.value.nombre || !newUser.value.correo || !newUser.value.telefono || !newUser.value.contraseña) {
+      alert("Por favor completa todos los campos.");
+      return;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(newUser.value.correo)) {
+      alert("Por favor ingresa un correo electrónico válido.");
+      return;
+    }
+
     const user = await communicationManager.postUser(newUser.value);
     users.value.push(user); // Agregar el nuevo usuario a la lista
     closeModalCreateUser();
   } catch (error) {
     console.error('Error al crear el usuario:', error);
+    alert("Hubo un error al crear el usuario. Intenta nuevamente.");
   }
 };
 
 // Función para actualizar un usuario
 const updateUser = async () => {
   try {
-    if (!selectedUser.value.ID_usuario) {
-      console.error('El ID del usuario no está definido.');
+    if (!selectedUser.value.ID_usuario || !selectedUser.value.nombre || !selectedUser.value.correo || !selectedUser.value.telefono || !selectedUser.value.contraseña) {
+      alert("Por favor completa todos los campos.");
       return;
     }
+
     const updatedUser = await communicationManager.updateUser(selectedUser.value.ID_usuario, selectedUser.value);
     const index = users.value.findIndex(user => user.ID_usuario === updatedUser.ID_usuario);
     if (index !== -1) {
@@ -146,6 +158,7 @@ const updateUser = async () => {
     closeModalEditUser();
   } catch (error) {
     console.error('Error al actualizar el usuario:', error);
+    alert("Hubo un error al actualizar el usuario. Intenta nuevamente.");
   }
 };
 

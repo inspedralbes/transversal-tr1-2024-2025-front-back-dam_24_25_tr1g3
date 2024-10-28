@@ -184,6 +184,7 @@ app.delete('/order/:num_pedido', async (req, res) => {
 
 // ROUTES FOR USERS
 
+// GET DE USUARIOS
 app.get('/users', async (req, res) => {
     try {
         const users = await communicationManager.getUsers(); // Obtener usuarios desde el communicationManager
@@ -193,6 +194,7 @@ app.get('/users', async (req, res) => {
     }
 });
 
+// OBTENER USER POR ID
 app.get('/user/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -208,6 +210,8 @@ app.get('/user/:id', async (req, res) => {
     }
 });
 
+
+// CREAR USER 
 app.post('/user', async (req, res) => {
     try {
         const userData = req.body;
@@ -218,6 +222,7 @@ app.post('/user', async (req, res) => {
     }
 });
 
+// UPDATE USER POR ID 
 app.put('/user/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -234,6 +239,8 @@ app.put('/user/:id', async (req, res) => {
     }
 });
 
+
+// ELIMINAR USER 
 app.delete('/user/:id', async (req, res) => {
     try {
         const { id } = req.params;

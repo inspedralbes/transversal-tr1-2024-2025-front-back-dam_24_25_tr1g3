@@ -85,6 +85,93 @@ async function deleteProduct(id) {
     }
 }
 
+// USERS
+
+// Obtener todos los usuarios
+async function getUsers() {
+    const [users] = await pool.query('SELECT * FROM Usuario'); // Asegúrate de que la tabla sea correcta
+    return users; // Devolver la lista de usuarios de la base de datos
+}
+
+// Obtener un usuario por ID
+async function getUser(id) {
+    const [user] = await pool.query('SELECT * FROM Usuario WHERE ID_usuario = ?', [id]);
+    if (user.length === 0) {
+        throw new Error('Usuario no encontrado');
+    }
+    return user[0]; // Devolver el usuario encontrado
+}
+
+// Insertar un nuevo usuario
+async function postUser(userData) {
+    try {
+        const { nombre, correo, telefono, contraseña } = userData; // Usar 'correo' en lugar de 'email'
+
+        // Validaciones simples
+        if (!nombre || !correo || !contraseña) {
+            throw new Error('Faltan datos requeridos');
+        }
+
+        const [result] = await pool.query(
+            'INSERT INTO Usuario (nombre, correo, telefono, contraseña) VALUES (?, ?, ?, ?)', 
+            [nombre, correo, telefono, contraseña]  // Asegúrate de que estas sean las columnas correctas
+        );
+
+        const newUser = {
+            ID_usuario: result.insertId,
+            nombre,
+            correo,
+            telefono,
+            contraseña
+        };
+
+        return newUser;
+    } catch (error) {
+        console.error('Error al insertar el usuario:', error);
+        throw error;
+    }
+}
+
+// Actualizar un usuario
+async function updateUser(id, userData) {
+    try {
+        const { nombre, correo, telefono, contraseña } = userData;
+
+        // Validar que los campos requeridos están presentes
+        if (!nombre || !correo || !contraseña) {
+            throw new Error('Faltan datos requeridos para actualizar');
+        }
+
+        const [result] = await pool.query(
+            'UPDATE Usuario SET nombre = ?, correo = ?, telefono = ?, contraseña = ? WHERE ID_usuario = ?',
+            [nombre, correo, telefono, contraseña, id]
+        );
+
+        if (result.affectedRows === 0) {
+            throw new Error('Usuario no encontrado');
+        }
+
+        return { id, nombre, correo, telefono, contraseña }; // Retorna solo los campos requeridos
+    } catch (error) {
+        console.error(`Error al actualizar el usuario con ID ${id}:`, error);
+        throw error;
+    }
+}
+
+// Eliminar un usuario
+async function deleteUser(id) {
+    try {
+        const [result] = await pool.query('DELETE FROM Usuario WHERE ID_usuario = ?', [id]);
+        if (result.affectedRows === 0) {
+            throw new Error('Usuario no encontrado');
+        }
+        return { message: 'Usuario eliminado correctamente' }; // Mensaje claro
+    } catch (error) {
+        console.error(`Error al eliminar el usuario con ID ${id}:`, error);
+        throw error;
+    }
+}
+
 // ORDERS
 
 // Obtener todas las órdenes
@@ -102,7 +189,6 @@ async function getOrder(id) {
     return order[0]; // Devolver la orden encontrada
 }
 
-// Insertar una nueva orden
 // Insertar una nueva orden
 async function postOrder(orderData) {
     const connection = await pool.getConnection(); // Obtener una conexión del pool
@@ -137,7 +223,6 @@ async function postOrder(orderData) {
     }
 }
 
-
 // Actualizar una orden
 async function updateOrder(id, orderData) {
     try {
@@ -166,11 +251,6 @@ async function deleteOrder(id) {
         console.error(`Error al eliminar el pedido con ID ${id}:`, error);
         throw error;
     }
-}
-
-async function getUsers() {
-    const [users] = await pool.query('SELECT * FROM Usuario'); // Asegúrate de que la tabla sea correcta
-    return users; // Devolver la lista de usuarios de la base de datos
 }
 
 // Obtener productos en un pedido específico
@@ -204,8 +284,12 @@ const communicationManager = {
     postOrder,
     updateOrder,
     deleteOrder,
-    getUsers, // Asegúrate de incluir esta línea
-
+    // USERS
+    getUsers,
+    getUser,
+    postUser,
+    updateUser,
+    deleteUser,
 };
 
 export { communicationManager };
