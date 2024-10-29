@@ -1,28 +1,47 @@
 <template>
-  <v-container>
+  <v-container class="main-container">
     <v-card outlined>
       <v-card-title>
         <h1>Gestión de Usuarios</h1>
         <v-spacer></v-spacer>
+        <v-text-field
+          v-model="searchQuery"
+          append-icon="mdi-magnify"
+          label="Buscar usuario por nombre"
+          outlined
+          clearable
+        ></v-text-field>
         <v-btn @click="openModalCreateUser" color="green">Crear Usuario</v-btn>
       </v-card-title>
 
       <v-divider></v-divider>
 
+      <!-- Grid de datos de usuarios -->
       <v-card-text>
-        <v-data-table
-          :headers="headers"
-          :items="users"
-          class="elevation-1"
-          item-key="ID_usuario"
-          no-data-text="No hay usuarios registrados."
-        >
-          <!-- Template para la columna de acciones -->
-          <template v-slot:item.acciones="{ item }">
-            <v-btn @click="openModalEditUser(item)" color="blue" small>Editar</v-btn>
-            <v-btn @click="deleteUser(item.ID_usuario)" color="red" small>Eliminar</v-btn>
-          </template>
-        </v-data-table>
+        <v-row>
+          <v-col
+            v-for="user in filteredUsers"
+            :key="user.ID_usuario"
+            cols="12"
+            sm="6"
+            md="4"
+          >
+            <v-card class="user-card" outlined>
+              <v-card-title>
+                <h3>{{ user.nombre }}</h3>
+              </v-card-title>
+              <v-card-subtitle>ID: {{ user.ID_usuario }}</v-card-subtitle>
+              <v-card-text>
+                <p><strong>Correo:</strong> {{ user.correo }}</p>
+                <p><strong>Teléfono:</strong> {{ user.telefono }}</p>
+              </v-card-text>
+              <v-card-actions>
+                <v-btn @click="openModalEditUser(user)" color="blue" small>Editar</v-btn>
+                <v-btn @click="deleteUser(user.ID_usuario)" color="red" small>Eliminar</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+        </v-row>
       </v-card-text>
     </v-card>
 
@@ -69,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { communicationManager } from '@/services/communicationManager.js';
 
 const isModalCreateUserOpen = ref(false);
@@ -77,44 +96,30 @@ const isModalEditUserOpen = ref(false);
 const users = ref([]);
 const newUser = ref({ nombre: '', correo: '', telefono: '', contraseña: '' });
 const selectedUser = ref({});
+const searchQuery = ref(''); // Variable de búsqueda
 
-// Encabezados de la tabla
-const headers = [
-  { text: 'ID', value: 'ID_usuario' },
-  { text: 'Nombre', value: 'nombre' },
-  { text: 'Correo', value: 'correo' },
-  { text: 'Teléfono', value: 'telefono' },
-  { text: 'Acciones', value: 'acciones', align: 'end', sortable: false },
-];
-
-// Función para abrir el modal de creación de usuario
 const openModalCreateUser = () => {
   newUser.value = { nombre: '', correo: '', telefono: '', contraseña: '' };
   isModalCreateUserOpen.value = true;
 };
 
-// Cerrar modal de crear usuario
 const closeModalCreateUser = () => {
   isModalCreateUserOpen.value = false;
 };
 
-// Abrir modal para editar un usuario
 const openModalEditUser = (user) => {
   selectedUser.value = { ...user };
   isModalEditUserOpen.value = true;
 };
 
-// Cerrar modal de edición
 const closeModalEditUser = () => {
   isModalEditUserOpen.value = false;
 };
 
-// Obtener los usuarios al montar el componente
 onMounted(async () => {
   await fetchUsers();
 });
 
-// Función para obtener usuarios
 const fetchUsers = async () => {
   try {
     const data = await communicationManager.getUsers();
@@ -124,7 +129,6 @@ const fetchUsers = async () => {
   }
 };
 
-// Función para crear un nuevo usuario
 const createUser = async () => {
   try {
     if (!newUser.value.nombre || !newUser.value.correo || !newUser.value.telefono || !newUser.value.contraseña) {
@@ -147,7 +151,6 @@ const createUser = async () => {
   }
 };
 
-// Función para actualizar un usuario
 const updateUser = async () => {
   try {
     if (!selectedUser.value.ID_usuario || !selectedUser.value.nombre || !selectedUser.value.correo || !selectedUser.value.telefono || !selectedUser.value.contraseña) {
@@ -167,7 +170,6 @@ const updateUser = async () => {
   }
 };
 
-// Función para eliminar un usuario
 const deleteUser = async (id) => {
   const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este usuario?');
   if (confirmDelete) {
@@ -179,9 +181,22 @@ const deleteUser = async (id) => {
     }
   }
 };
+
+// Computed para filtrar usuarios según la búsqueda
+const filteredUsers = computed(() => {
+  if (!searchQuery.value) {
+    return users.value;
+  }
+  const query = searchQuery.value.toLowerCase();
+  return users.value.filter(user => user.nombre.toLowerCase().includes(query));
+});
 </script>
 
 <style scoped>
+.main-container {
+  margin-top: 60px;
+}
+
 h1 {
   margin: 0;
   font-size: 24px;
@@ -190,5 +205,16 @@ h1 {
 
 .v-btn {
   margin: 10px 0;
+}
+
+.user-card {
+  padding: 16px;
+  text-align: left;
+}
+
+.user-card h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
 }
 </style>
