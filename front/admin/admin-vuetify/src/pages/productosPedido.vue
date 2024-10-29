@@ -44,6 +44,7 @@ onMounted(async () => {
   try {
     // Llama a la API para obtener los productos de este pedido
     const data = await communicationManager.getOrderProducts(orderId);
+    console.log("Datos recibidos:", data); // Imprime los datos de la API
     productosPedido.value = Array.isArray(data) ? data : []; // Verifica que sea un array
     console.log("Productos en pedido:", productosPedido.value); // Imprime los datos completos
   } catch (error) {
