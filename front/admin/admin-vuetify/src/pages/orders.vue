@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container class="main-container">
     <v-card outlined>
       <v-card-title>
         <h1>Gestión de Pedidos</h1>
@@ -10,9 +10,17 @@
       <v-divider></v-divider>
 
       <v-card-text>
+        <!-- Campo de búsqueda -->
+        <v-text-field 
+          v-model="searchQuery" 
+          label="Buscar Pedidos" 
+          clearable 
+          append-icon="mdi-magnify"
+        ></v-text-field>
+
         <v-data-table
           :headers="headers"
-          :items="orders"
+          :items="filteredOrders"
           class="elevation-1"
           item-key="num_pedido"
           no-data-text="No hay pedidos registrados."
@@ -41,7 +49,6 @@
             label="Estado"
             required
           />
-
           <!-- Sección para añadir productos -->
           <v-divider></v-divider>
           <h3>Productos</h3>
@@ -92,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { communicationManager } from '@/services/communicationManager.js';
 
 const isModalCreateOrderOpen = ref(false);
@@ -100,6 +107,7 @@ const isModalEditOrderOpen = ref(false);
 const orders = ref([]);
 const newOrder = ref({ ID_usuario: '', total_pedido: '', estado: '', productos: [] });
 const selectedOrder = ref({});
+const searchQuery = ref(''); // Variable para el campo de búsqueda
 
 // Encabezados de la tabla
 const headers = [
@@ -199,9 +207,30 @@ const deleteOrder = async (id) => {
     }
   }
 };
+
+// Computed para filtrar pedidos según la búsqueda
+const filteredOrders = computed(() => {
+  if (!searchQuery.value) {
+    return orders.value;
+  }
+  const query = searchQuery.value.toLowerCase();
+  return orders.value.filter(order => {
+    return (
+      order.num_pedido.toString().includes(query) || // Filtrar por número de pedido
+      order.ID_usuario.toString().includes(query) || // Filtrar por ID de usuario
+      order.estado.toLowerCase().includes(query) ||   // Filtrar por estado
+      order.total_pedido.toString().includes(query) || // Filtrar por total
+      new Date(order.fecha).toLocaleDateString().includes(query) // Filtrar por fecha
+    );
+  });
+});
 </script>
 
 <style scoped>
+.main-container {
+  margin-top: 60px;
+}
+
 h1 {
   margin: 0;
   font-size: 24px;

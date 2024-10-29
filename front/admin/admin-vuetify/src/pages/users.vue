@@ -4,6 +4,13 @@
       <v-card-title>
         <h1>Gestión de Usuarios</h1>
         <v-spacer></v-spacer>
+        <v-btn @click="openModalCreateUser" color="green">Crear Usuario</v-btn>
+      </v-card-title>
+
+      <v-divider></v-divider>
+
+      <!-- Buscador debajo del botón de crear usuario -->
+      <v-card-text>
         <v-text-field
           v-model="searchQuery"
           append-icon="mdi-magnify"
@@ -11,8 +18,7 @@
           outlined
           clearable
         ></v-text-field>
-        <v-btn @click="openModalCreateUser" color="green">Crear Usuario</v-btn>
-      </v-card-title>
+      </v-card-text>
 
       <v-divider></v-divider>
 

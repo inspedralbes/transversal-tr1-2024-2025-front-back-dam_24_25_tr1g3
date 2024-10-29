@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container class="main-container">
     <v-card outlined>
       <v-card-title>
         <h1>Gestión de Productos</h1>
@@ -10,11 +10,21 @@
       <v-divider></v-divider>
 
       <v-card-text>
+        <!-- Campo de búsqueda -->
+        <v-text-field
+          v-model="searchQuery"
+          label="Buscar Producto"
+          prepend-icon="mdi-magnify"
+          clearable
+        ></v-text-field>
+
         <v-row>
           <v-col
-            v-for="(product, index) in products"
-            :key="index"
-            cols="12" md="4" lg="3"
+            v-for="product in filteredProducts"
+            :key="product.ID_producto"
+            cols="12"
+            sm="6"
+            md="4"
           >
             <v-card>
               <v-card-title>{{ product.nombre }}</v-card-title>
@@ -38,7 +48,7 @@
             </v-card>
           </v-col>
         </v-row>
-        <v-list v-if="products.length === 0">
+        <v-list v-if="filteredProducts.length === 0">
           <v-list-item>
             <v-list-item-content>No hay productos registrados.</v-list-item-content>
           </v-list-item>
@@ -91,18 +101,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { communicationManager } from '@/services/communicationManager.js';
 
 const isModalCreateProductOpen = ref(false);
 const isModalEditProductOpen = ref(false);
 const products = ref([]);
 const selectedProduct = ref({});
-const newProduct = ref({ nombre: '', descripcion: '', precio: '', stock: '', imagen: '' }); // Inicializamos el nuevo producto
+const newProduct = ref({ nombre: '', descripcion: '', precio: '', stock: '', imagen: '' });
+const searchQuery = ref(''); // Añadido para el campo de búsqueda
 
 // Abrir modal para crear producto
 const openModalCreateProduct = () => {
-  newProduct.value = { nombre: '', descripcion: '', precio: '', stock: '', imagen: '' }; // Reiniciar el nuevo producto
+  newProduct.value = { nombre: '', descripcion: '', precio: '', stock: '', imagen: '' };
   isModalCreateProductOpen.value = true;
 };
 
@@ -113,7 +124,7 @@ const closeModalCreateProduct = () => {
 
 // Abrir modal para editar producto
 const openModalEditProduct = (product) => {
-  selectedProduct.value = { ...product }; // Hacemos una copia del producto para editar
+  selectedProduct.value = { ...product };
   isModalEditProductOpen.value = true;
 };
 
@@ -174,9 +185,23 @@ const deleteProduct = async (id) => {
     }
   }
 };
+
+// Computed para filtrar productos según la búsqueda
+const filteredProducts = computed(() => {
+  if (!searchQuery.value) {
+    return products.value;
+  }
+  const query = searchQuery.value.toLowerCase();
+  return products.value.filter(product => product.nombre.toLowerCase().includes(query));
+});
+
 </script>
 
 <style scoped>
+.main-container {
+  margin-top: 60px;
+}
+
 h1 {
   margin: 0;
   font-size: 24px;
