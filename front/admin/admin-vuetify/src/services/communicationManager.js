@@ -117,7 +117,7 @@ async function updateUser(id, userData) {
 // Eliminar un usuario por ID
 async function deleteUser(id) {
   try {
-    const response = await fetch(`${URLbase}/users/${id}`, {
+    const response = await fetch(`${URLbase}/user/${id}`, {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Error al eliminar usuario');
