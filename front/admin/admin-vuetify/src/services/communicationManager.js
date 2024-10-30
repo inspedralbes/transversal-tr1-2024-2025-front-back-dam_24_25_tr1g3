@@ -199,7 +199,7 @@ async function getOrderProducts(orderId) {
   try {
     const response = await fetch(`${URLbase}/order/${orderId}/products`);
     if (!response.ok) throw new Error('Error en la red');
-    return await response.json(); // Debe devolver el array de productos de la orden
+    return await response.json(); 
   } catch (error) {
     console.error(`Error al obtener los productos del pedido ${orderId}:`, error);
   }

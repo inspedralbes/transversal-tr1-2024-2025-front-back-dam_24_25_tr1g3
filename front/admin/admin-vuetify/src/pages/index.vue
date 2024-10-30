@@ -1,6 +1,7 @@
 <!-- src/components/Login.vue -->
 <template>
-  
+    <v-container class="main-container">
+
   <div class="login-container">
     
     <h2>Iniciar Sesión</h2>
@@ -17,6 +18,7 @@
     </form>
     <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
   </div>
+    </v-container>
 </template>
 
 <script setup>
@@ -58,6 +60,10 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
+.main-container {
+  margin-top: 60px;
+}
+
 .login-container {
   max-width: 400px;
   margin: 0 auto;

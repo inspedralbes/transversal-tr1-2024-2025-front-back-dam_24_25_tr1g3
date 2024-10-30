@@ -29,6 +29,7 @@
           <template v-slot:item.acciones="{ item }">
             <v-btn @click="openModalEditOrder(item)" color="blue" small>Editar</v-btn>
             <v-btn @click="deleteOrder(item.num_pedido)" color="red" small>Eliminar</v-btn>
+            <v-btn @click="openProductModal(item)" color="yellow" small>Ver Productos</v-btn>
           </template>
         </v-data-table>
       </v-card-text>
@@ -95,6 +96,28 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Modal para Ver Productos de un Pedido -->
+    <v-dialog v-model="isModalProductOpen" max-width="600px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">Productos del Pedido {{ selectedOrder.num_pedido }}</span>
+        </v-card-title>
+        <v-card-text>
+          <v-data-table
+            :headers="productHeaders"
+            :items="orderProducts"
+            item-key="ID_producto"
+            class="elevation-1"
+            no-data-text="No hay productos en este pedido."
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="closeProductModal" color="grey">Cerrar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -104,12 +127,14 @@ import { communicationManager } from '@/services/communicationManager.js';
 
 const isModalCreateOrderOpen = ref(false);
 const isModalEditOrderOpen = ref(false);
+const isModalProductOpen = ref(false);
 const orders = ref([]);
 const newOrder = ref({ ID_usuario: '', total_pedido: '', estado: '', productos: [] });
 const selectedOrder = ref({});
+const orderProducts = ref([]); // Productos del pedido seleccionado
 const searchQuery = ref(''); // Variable para el campo de búsqueda
 
-// Encabezados de la tabla
+// Encabezados de la tabla de pedidos
 const headers = [
   { text: 'Número de Pedido', value: 'num_pedido' },
   { text: 'ID Usuario', value: 'ID_usuario' },
@@ -117,6 +142,14 @@ const headers = [
   { text: 'Total', value: 'total_pedido' },
   { text: 'Estado', value: 'estado' },
   { text: 'Acciones', value: 'acciones', align: 'end', sortable: false },
+];
+
+// Encabezados de la tabla de productos
+const productHeaders = [
+  { text: 'ID Producto', value: 'ID_producto' },
+  { text: 'Cantidad', value: 'cantidad' },
+  { text: 'Precio Unitario', value: 'precio_unitario' },
+  { text: 'Total', value: 'total' },
 ];
 
 // Abrir modal para crear un nuevo pedido
@@ -208,36 +241,45 @@ const deleteOrder = async (id) => {
   }
 };
 
-// Computed para filtrar pedidos según la búsqueda
-const filteredOrders = computed(() => {
-  if (!searchQuery.value) {
-    return orders.value;
+// Función para abrir el modal de productos del pedido
+const openProductModal = async (order) => {
+  selectedOrder.value = order;
+  isModalProductOpen.value = true;
+  
+  try {
+    const productos = await communicationManager.getOrderProducts(order.num_pedido);
+    orderProducts.value = productos.map(product => ({
+      ...product,
+      total: product.cantidad * product.precio_unitario,
+    }));
+  } catch (error) {
+    console.error('Error al cargar productos del pedido:', error);
   }
-  const query = searchQuery.value.toLowerCase();
-  return orders.value.filter(order => {
-    return (
-      order.num_pedido.toString().includes(query) || // Filtrar por número de pedido
-      order.ID_usuario.toString().includes(query) || // Filtrar por ID de usuario
-      order.estado.toLowerCase().includes(query) ||   // Filtrar por estado
-      order.total_pedido.toString().includes(query) || // Filtrar por total
-      new Date(order.fecha).toLocaleDateString().includes(query) // Filtrar por fecha
-    );
-  });
+};
+
+// Cerrar el modal de productos
+const closeProductModal = () => {
+  isModalProductOpen.value = false;
+  orderProducts.value = [];
+};
+
+// Filtrar pedidos con la búsqueda
+const filteredOrders = computed(() => {
+  if (!searchQuery.value) return orders.value;
+  return orders.value.filter(order =>
+    order.num_pedido.toString().includes(searchQuery.value) ||
+    order.ID_usuario.toString().includes(searchQuery.value)
+  );
 });
 </script>
 
 <style scoped>
 .main-container {
-  margin-top: 60px;
+  padding-top: 60px;
 }
-
 h1 {
   margin: 0;
   font-size: 24px;
   font-weight: bold;
-}
-
-.v-btn {
-  margin: 10px 0;
 }
 </style>
