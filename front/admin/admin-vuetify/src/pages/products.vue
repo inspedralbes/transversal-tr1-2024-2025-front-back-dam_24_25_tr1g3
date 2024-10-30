@@ -103,6 +103,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { communicationManager } from '@/services/communicationManager.js';
+import { io } from 'socket.io-client';
 
 const isModalCreateProductOpen = ref(false);
 const isModalEditProductOpen = ref(false);

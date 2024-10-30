@@ -285,6 +285,16 @@ async function deleteOrderProduct(num_pedido, ID_producto) {
     }
 }
 
+
+// IMAGEN
+
+const getImagePath = (imagePath) => {
+let apiUrl = import.meta.env.VITE_API_URL;
+let imageUrl = apiUrl + imagePath;
+console.log(imageUrl)
+return imageUrl
+};
+
 // Objeto que contiene todas las funciones para manejar productos y pedidos
 const communicationManager = {
     // PRODUCTS
@@ -295,6 +305,8 @@ const communicationManager = {
     deleteProduct,
     getOrderProducts,
     deleteOrderProduct, // Agregar la función de eliminación
+    getImagePath,
+    
     // ORDERS
     getOrders,
     getOrder,
