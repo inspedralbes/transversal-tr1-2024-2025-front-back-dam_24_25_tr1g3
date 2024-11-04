@@ -1,29 +1,34 @@
-import 'dotenv/config'; // Para importar dotenv en ES Modules
+import 'dotenv/config'; // Importar dotenv para variables de entorno
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors'; // Importar CORS
 import mysql from 'mysql2/promise'; // Importar MySQL
+import { communicationManager } from './communicationManager.js'; // Importación de communicationManager.js
+import path from 'path'; // Asegúrate de importar path
 
-// Importar communicationManager.js
-import { communicationManager } from './communicationManager.js'; // La extensión .js es obligatoria
-
-const app = express();
+const app = express(); // Crear instancia de express
 app.use(cors()); // Habilitar CORS
 app.use(express.json());
 
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST']
+    }
+});
 
 const port = process.env.PORT || 3000; // Usa PORT del archivo .env o 3000 por defecto
 
-// Conectar a la base de datos MySQL
+// Configuración de la base de datos MySQL
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'a24bermirpre',  // Usuario proporcionado
     password: process.env.DB_PASSWORD || 'InstitutPedralbes_2024',  // Contraseña proporcionada
     database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos
 };
+
 let connection;
 
 (async () => {
@@ -35,6 +40,7 @@ let connection;
     }
 })();
 
+// Configuración de Socket.IO
 io.on('connection', (socket) => {
     console.log('Un usuario se ha conectado');
 
@@ -42,21 +48,24 @@ io.on('connection', (socket) => {
         console.log('Mensaje recibido:', msg);
         socket.emit('respuesta', 'Mensaje recibido en el servidor');
     });
- 
+
     socket.on('disconnect', () => {
         console.log('Un usuario se ha desconectado');
     });
 });
 
-// 
-
-// ROUTES FOR PRODUCTS
-
+// Rutas para productos
 app.get('/products', async (req, res) => {
     try {
         const products = await communicationManager.getProducts(); // Obtener productos desde el communicationManager
+        
+        // Emitir los productos a todos los clientes conectados
+        io.emit('productosActualizados', products);
+        console.log('Productos enviados a los clientes:', products.length); // Mensaje de depuración
+        
         res.json(products); // Enviar productos como JSON
     } catch (error) {
+        console.error('Error al obtener productos:', error); // Mensaje de error en consola
         res.status(500).json({ error: 'Error al obtener productos' });
     }
 });
@@ -65,11 +74,11 @@ app.get('/product/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const product = await communicationManager.getProduct(Number(id)); // Convertir ID a número
-        
+
         if (!product) {
             return res.status(404).json({ error: 'Producto no encontrado' });
         }
-        
+
         res.json(product); // Enviar producto como JSON
     } catch (error) {
         console.error(error); // Agrega esto para ver el error en la consola
@@ -92,11 +101,11 @@ app.put('/product/:id', async (req, res) => {
         const { id } = req.params;
         const productData = req.body; // Debes pasar los nuevos datos
         const updatedProduct = await communicationManager.updateProduct(Number(id), productData); // Convertir ID a número
-        
+
         if (!updatedProduct) {
             return res.status(404).json({ error: 'Producto no encontrado para actualizar' });
         }
-        
+
         res.json(updatedProduct); // Enviar el producto actualizado
     } catch (error) {
         res.status(500).json({ error: 'Error al actualizar el producto' });
@@ -107,11 +116,11 @@ app.delete('/product/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const result = await communicationManager.deleteProduct(Number(id)); // Convertir ID a número
-        
+
         if (!result) {
             return res.status(404).json({ error: 'Producto no encontrado para eliminar' });
         }
-        
+
         res.json({ message: 'Producto eliminado correctamente' });
     } catch (error) {
         res.status(500).json({ error: 'Error al eliminar el producto' });
@@ -153,6 +162,7 @@ app.post('/order', async (req, res) => {
         res.status(500).json({ error: 'Error al crear el pedido' });
     }
 });
+
 
 app.put('/order/:id', async (req, res) => {
     try {
@@ -282,28 +292,23 @@ app.delete('/order/:num_pedido/product/:id_producto', async (req, res) => {
     }
 });
 
-// ROUTE FOR LOGIN
+// Ruta de login
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        // Consulta a la base de datos para encontrar el usuario
         const [users] = await connection.execute('SELECT * FROM users WHERE username = ?', [username]);
 
-        // Verificar si el usuario existe
         if (users.length === 0) {
             return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
         }
 
         const user = users[0];
 
-        // Aquí deberías verificar la contraseña. Este es un ejemplo simple.
-        // Asegúrate de usar un método de hash seguro (como bcrypt) en un entorno de producción.
         if (user.password !== password) {
             return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
         }
 
-        // Si las credenciales son correctas, puedes devolver una respuesta de éxito
         res.json({ message: 'Inicio de sesión exitoso', user: { id: user.id, username: user.username } });
     } catch (error) {
         console.error('Error en el inicio de sesión:', error);
@@ -311,11 +316,11 @@ app.post('/login', async (req, res) => {
     }
 });
 
-
 app.get('/', (req, res) => {
     res.send('¡Bienvenido a la API del proyecto!');
 });
 
+// Iniciar servidor
 server.listen(port, () => {
     console.log(`Servidor corriendo en http://localhost:${port}`);
 });

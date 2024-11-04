@@ -19,6 +19,7 @@ CREATE TABLE Producto (
     nombre VARCHAR(100) NOT NULL,
     descripcion TEXT,
     precio DECIMAL(10, 2) NOT NULL,
+    imagen varchar(255),
     stock INT NOT NULL
 );
 
