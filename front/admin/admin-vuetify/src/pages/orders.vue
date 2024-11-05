@@ -10,7 +10,6 @@
       <v-divider></v-divider>
 
       <v-card-text>
-        <!-- Campo de búsqueda -->
         <v-text-field 
           v-model="searchQuery" 
           label="Buscar Pedidos" 
@@ -25,7 +24,6 @@
           item-key="num_pedido"
           no-data-text="No hay pedidos registrados."
         >
-          <!-- Template para la columna de acciones -->
           <template v-slot:item.acciones="{ item }">
             <v-btn @click="openModalEditOrder(item)" color="blue" small>Editar</v-btn>
             <v-btn @click="deleteOrder(item.num_pedido)" color="red" small>Eliminar</v-btn>
@@ -50,7 +48,6 @@
             label="Estado"
             required
           />
-          <!-- Sección para añadir productos -->
           <v-divider></v-divider>
           <h3>Productos</h3>
           <div v-for="(producto, index) in newOrder.productos" :key="index">
@@ -123,7 +120,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { communicationManager } from '@/services/communicationManager.js';
+import { communicationManager, socket } from '@/services/communicationManager.js';
 
 const isModalCreateOrderOpen = ref(false);
 const isModalEditOrderOpen = ref(false);
@@ -131,10 +128,9 @@ const isModalProductOpen = ref(false);
 const orders = ref([]);
 const newOrder = ref({ ID_usuario: '', total_pedido: '', estado: '', productos: [] });
 const selectedOrder = ref({});
-const orderProducts = ref([]); // Productos del pedido seleccionado
-const searchQuery = ref(''); // Variable para el campo de búsqueda
+const orderProducts = ref([]);
+const searchQuery = ref('');
 
-// Encabezados de la tabla de pedidos
 const headers = [
   { text: 'Número de Pedido', value: 'num_pedido' },
   { text: 'ID Usuario', value: 'ID_usuario' },
@@ -144,7 +140,6 @@ const headers = [
   { text: 'Acciones', value: 'acciones', align: 'end', sortable: false },
 ];
 
-// Encabezados de la tabla de productos
 const productHeaders = [
   { text: 'ID Producto', value: 'ID_producto' },
   { text: 'Cantidad', value: 'cantidad' },
@@ -152,34 +147,43 @@ const productHeaders = [
   { text: 'Total', value: 'total' },
 ];
 
-// Abrir modal para crear un nuevo pedido
 const openModalCreateOrder = () => {
   newOrder.value = { ID_usuario: '', total_pedido: '', estado: '', productos: [] };
   isModalCreateOrderOpen.value = true;
 };
 
-// Cerrar modal de crear pedido
 const closeModalCreateOrder = () => {
   isModalCreateOrderOpen.value = false;
 };
 
-// Abrir modal para editar un pedido
 const openModalEditOrder = (order) => {
   selectedOrder.value = { ...order };
   isModalEditOrderOpen.value = true;
 };
 
-// Cerrar modal de edición
 const closeModalEditOrder = () => {
   isModalEditOrderOpen.value = false;
 };
 
-// Obtener todos los pedidos al montar el componente
 onMounted(async () => {
   await fetchOrders();
+  // Escuchar eventos de Socket.io
+  socket.on('orderCreated', (order) => {
+    orders.value.push(order);
+  });
+
+  socket.on('orderUpdated', (updatedOrder) => {
+    const index = orders.value.findIndex(order => order.num_pedido === updatedOrder.num_pedido);
+    if (index !== -1) {
+      orders.value[index] = updatedOrder;
+    }
+  });
+
+  socket.on('orderDeleted', (id) => {
+    orders.value = orders.value.filter(order => order.num_pedido !== id);
+  });
 });
 
-// Función para obtener pedidos
 const fetchOrders = async () => {
   try {
     orders.value = await communicationManager.getOrders();
@@ -188,30 +192,25 @@ const fetchOrders = async () => {
   }
 };
 
-// Función para añadir un producto a la lista
 const addProduct = () => {
   newOrder.value.productos.push({ ID_producto: '', cantidad: '', precio_unitario: '' });
 };
 
-// Función para eliminar un producto de la lista
 const removeProduct = (index) => {
   newOrder.value.productos.splice(index, 1);
 };
 
-// Función para crear un nuevo pedido
 const createOrder = async () => {
   newOrder.value.fecha = new Date().toISOString();
   try {
     const order = await communicationManager.postOrder(newOrder.value);
     orders.value.push(order);
     closeModalCreateOrder();
-    await fetchOrders(); 
   } catch (error) {
     console.error('Error al crear el pedido:', error);
   }
 };
 
-// Función para actualizar un pedido
 const updateOrder = async () => {
   try {
     if (!selectedOrder.value.num_pedido) {
@@ -224,28 +223,23 @@ const updateOrder = async () => {
       orders.value[index] = updatedOrder;
     }
     closeModalEditOrder();
-    await fetchOrders(); 
-
   } catch (error) {
     console.error('Error al actualizar el pedido:', error);
   }
 };
 
-// Función para eliminar un pedido
 const deleteOrder = async (id) => {
   const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este pedido?');
   if (confirmDelete) {
     try {
       await communicationManager.deleteOrder(id);
       orders.value = orders.value.filter(order => order.num_pedido !== id);
-      await fetchOrders(); 
     } catch (error) {
       console.error('Error al eliminar el pedido:', error);
     }
   }
 };
 
-// Función para abrir el modal de productos del pedido
 const openProductModal = async (order) => {
   selectedOrder.value = order;
   isModalProductOpen.value = true;
@@ -261,13 +255,11 @@ const openProductModal = async (order) => {
   }
 };
 
-// Cerrar el modal de productos
 const closeProductModal = () => {
   isModalProductOpen.value = false;
   orderProducts.value = [];
 };
 
-// Filtrar pedidos con la búsqueda
 const filteredOrders = computed(() => {
   if (!searchQuery.value) return orders.value;
   return orders.value.filter(order =>

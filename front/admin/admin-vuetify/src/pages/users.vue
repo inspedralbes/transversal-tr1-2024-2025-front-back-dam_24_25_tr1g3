@@ -9,7 +9,6 @@
 
       <v-divider></v-divider>
 
-      <!-- Buscador debajo del botón de crear usuario -->
       <v-card-text>
         <v-text-field
           v-model="searchQuery"
@@ -22,7 +21,6 @@
 
       <v-divider></v-divider>
 
-      <!-- Grid de datos de usuarios -->
       <v-card-text>
         <v-row>
           <v-col
@@ -61,7 +59,6 @@
           <v-text-field v-model="newUser.nombre" label="Nombre" required />
           <v-text-field v-model="newUser.correo" label="Correo" type="email" required />
           <v-text-field v-model="newUser.telefono" label="Teléfono" required />
-          <v-text-field v-model="newUser.contraseña" label="Contraseña" type="password" required />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -71,7 +68,7 @@
       </v-card>
     </v-dialog>
 
-    <!-- Modal para Editar Usuario -->
+    <!-- Modal para editar Usuario -->
     <v-dialog v-model="isModalEditUserOpen" max-width="500px">
       <v-card>
         <v-card-title>
@@ -81,7 +78,6 @@
           <v-text-field v-model="selectedUser.nombre" label="Nombre" required />
           <v-text-field v-model="selectedUser.correo" label="Correo" type="email" required />
           <v-text-field v-model="selectedUser.telefono" label="Teléfono" required />
-          <v-text-field v-model="selectedUser.contraseña" label="Contraseña" type="password" required />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -94,8 +90,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { communicationManager } from '@/services/communicationManager.js';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { communicationManager, socket } from '@/services/communicationManager.js';
 
 const isModalCreateUserOpen = ref(false);
 const isModalEditUserOpen = ref(false);
@@ -104,129 +100,105 @@ const newUser = ref({ nombre: '', correo: '', telefono: '', contraseña: '' });
 const selectedUser = ref({});
 const searchQuery = ref(''); // Variable de búsqueda
 
+
+// Abrir modal para crear usuario
 const openModalCreateUser = () => {
   newUser.value = { nombre: '', correo: '', telefono: '', contraseña: '' };
   isModalCreateUserOpen.value = true;
 };
 
+// Cerrar modal de crear usuario
 const closeModalCreateUser = () => {
   isModalCreateUserOpen.value = false;
 };
 
+// Abrir modal para editar usuario
 const openModalEditUser = (user) => {
   selectedUser.value = { ...user };
   isModalEditUserOpen.value = true;
 };
 
+// Cerrar modal de edición
 const closeModalEditUser = () => {
   isModalEditUserOpen.value = false;
 };
 
+// Obtener todos los usuarios al montar el componente
 onMounted(async () => {
   await fetchUsers();
+
+  // Escuchar eventos de Socket.io para cambios en usuarios
+  socket.on('userCreated', (newUser) => {
+    users.value.push(newUser);
+    
+  });
+
+  socket.on('userUpdated', (updatedUser) => {
+    const index = users.value.findIndex(u => u.ID_usuario === updatedUser.ID_usuario);
+    if (index !== -1) users.value[index] = updatedUser;
+  });
+
+  socket.on('userDeleted', (deletedUserId) => {
+    users.value = users.value.filter(u => u.ID_usuario !== deletedUserId);
+  });
 });
 
+// Desconectar el socket cuando el componente se desmonte
+onBeforeUnmount(() => {
+  socket.off('userCreated');
+  socket.off('userUpdated');
+  socket.off('userDeleted');
+});
+
+// Función para obtener usuarios
 const fetchUsers = async () => {
   try {
-    const data = await communicationManager.getUsers();
-    users.value = Array.isArray(data) ? data : [];
+    users.value = await communicationManager.getUsers();
   } catch (error) {
-    console.error('No se pudieron cargar los usuarios:', error);
+    console.error('Error al cargar usuarios:', error);
   }
 };
 
+// Crear nuevo usuario
 const createUser = async () => {
-  try {
-    if (!newUser.value.nombre || !newUser.value.correo || !newUser.value.telefono || !newUser.value.contraseña) {
-      alert("Por favor completa todos los campos.");
-      return;
-    }
+  await communicationManager.postUser(newUser.value);
+  closeModalCreateUser();
+  await fetchUsers(); 
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(newUser.value.correo)) {
-      alert("Por favor ingresa un correo electrónico válido.");
-      return;
-    }
-
-    const user = await communicationManager.postUser(newUser.value);
-    users.value.push(user);
-    closeModalCreateUser();
-    await fetchUsers(); 
-
-  } catch (error) {
-    console.error('Error al crear el usuario:', error);
-    alert("Hubo un error al crear el usuario. Intenta nuevamente.");
-  }
 };
 
+// Actualizar usuario
 const updateUser = async () => {
-  try {
-    if (!selectedUser.value.ID_usuario || !selectedUser.value.nombre || !selectedUser.value.correo || !selectedUser.value.telefono || !selectedUser.value.contraseña) {
-      alert("Por favor completa todos los campos.");
-      return;
-    }
+  await communicationManager.updateUser(selectedUser.value.ID_usuario, selectedUser.value);
+  closeModalEditUser();
+  await fetchUsers(); 
 
-    const updatedUser = await communicationManager.updateUser(selectedUser.value.ID_usuario, selectedUser.value);
-    const index = users.value.findIndex(user => user.ID_usuario === updatedUser.ID_usuario);
-    if (index !== -1) {
-      users.value[index] = updatedUser;
-    }
-    closeModalEditUser();
-    await fetchUsers(); 
-
-  } catch (error) {
-    console.error('Error al actualizar el usuario:', error);
-    alert("Hubo un error al actualizar el usuario. Intenta nuevamente.");
-  }
 };
 
+// Eliminar usuario
 const deleteUser = async (id) => {
-  const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este usuario?');
-  if (confirmDelete) {
-    try {
-      await communicationManager.deleteUser(id);
-      users.value = users.value.filter(user => user.ID_usuario !== id);
-      await fetchUsers(); 
-
-    } catch (error) {
-      console.error('Error al eliminar el usuario:', error);
-    }
+  if (confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
+    await communicationManager.deleteUser(id);
+    await fetchUsers(); 
+socket.emit('usuario eliminado')
   }
 };
 
-// Computed para filtrar usuarios según la búsqueda
+// Filtrar usuarios según la búsqueda
 const filteredUsers = computed(() => {
-  if (!searchQuery.value) {
-    return users.value;
-  }
-  const query = searchQuery.value.toLowerCase();
-  return users.value.filter(user => user.nombre.toLowerCase().includes(query));
+  return users.value.filter(user => user.nombre.toLowerCase().includes(searchQuery.value.toLowerCase()));
 });
 </script>
 
 <style scoped>
 .main-container {
-  margin-top: 60px;
+  margin: 20px;
 }
-
-h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.v-btn {
-  margin: 10px 0;
-}
-
 .user-card {
-  padding: 16px;
-  text-align: left;
+  transition: transform 0.2s;
 }
 
-.user-card h3 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: bold;
+.user-card:hover {
+  transform: scale(1.02);
 }
 </style>

@@ -101,11 +101,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
-import { communicationManager } from '@/services/communicationManager.js';
-import { io } from 'socket.io-client';
-
-const URLbase = import.meta.env.VITE_API_URL;
-const socket = io(URLbase); // Conectar al servidor con Socket.io
+import { communicationManager, socket } from '@/services/communicationManager.js';
 
 const isModalCreateProductOpen = ref(false);
 const isModalEditProductOpen = ref(false);
@@ -145,9 +141,10 @@ onMounted(async () => {
     products.value.push(newProduct);
   });
 
-  socket.on('productUpdated', (updatedProduct) => {
+  socket.on('productUpdated', async (updatedProduct) => {
     const index = products.value.findIndex(p => p.ID_producto === updatedProduct.ID_producto);
     if (index !== -1) products.value[index] = updatedProduct;
+
   });
 
   socket.on('productDeleted', (deletedProductId) => {
@@ -157,7 +154,9 @@ onMounted(async () => {
 
 // Desconectar el socket cuando el componente se desmonte
 onBeforeUnmount(() => {
-  socket.disconnect();
+  socket.off('productCreated');
+  socket.off('productUpdated');
+  socket.off('productDeleted');
 });
 
 // Función para obtener productos
@@ -165,59 +164,38 @@ const fetchProducts = async () => {
   try {
     products.value = await communicationManager.getProducts();
   } catch (error) {
-    console.error('No se pudieron cargar los productos:', error);
+    console.error('Error al cargar productos:', error);
   }
 };
 
-// Función para crear un nuevo producto
+// Crear nuevo producto
 const createProduct = async () => {
-  try {
-    const createdProduct = await communicationManager.postProduct(newProduct.value);
-    socket.emit('productCreated', createdProduct); // Emitir el evento
-    await fetchProducts(); // Refrescar la lista de productos
-    closeModalCreateProduct();
-  } catch (error) {
-    console.error('Error al crear el producto:', error);
-  }
+  await communicationManager.postProduct(newProduct.value);
+  closeModalCreateProduct();
+  await fetchProducts(); 
+
 };
 
-// Función para actualizar el producto
+// Actualizar producto
 const updateProduct = async () => {
-  try {
-    if (!selectedProduct.value.ID_producto) {
-      console.error('El ID del producto no está definido.');
-      return;
-    }
-    const updatedProduct = await communicationManager.updateProduct(selectedProduct.value.ID_producto, selectedProduct.value);
-    socket.emit('productUpdated', updatedProduct); // Emitir el evento
-    await fetchProducts(); // Refrescar la lista de productos
-    closeModalEditProduct();
-  } catch (error) {
-    console.error('Error al actualizar el producto:', error);
-  }
+  await communicationManager.updateProduct(selectedProduct.value.ID_producto, selectedProduct.value);
+  closeModalEditProduct();
+  await fetchProducts(); 
+
 };
 
-// Función para eliminar un producto
+// Eliminar producto
 const deleteProduct = async (id) => {
-  const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este producto?');
-  if (confirmDelete) {
-    try {
-      await communicationManager.deleteProduct(id);
-      socket.emit('productDeleted', id); // Emitir el evento
-      await fetchProducts(); // Refrescar la lista de productos
-    } catch (error) {
-      console.error('Error al eliminar el producto:', error);
-    }
+  if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+    await communicationManager.deleteProduct(id);
+    await fetchProducts(); 
+    socket.emit('Producto eliminado')
   }
 };
 
-// Computed para filtrar productos según la búsqueda
+// Filtrar productos según la búsqueda
 const filteredProducts = computed(() => {
-  if (!searchQuery.value) {
-    return products.value;
-  }
-  const query = searchQuery.value.toLowerCase();
-  return products.value.filter(product => product.nombre.toLowerCase().includes(query));
+  return products.value.filter(product => product.nombre.toLowerCase().includes(searchQuery.value.toLowerCase()));
 });
 </script>
 

@@ -1,8 +1,23 @@
 const URLbase = import.meta.env.VITE_API_URL;
+
 console.log(URLbase);
 import { io } from 'socket.io-client';
 
+console.log('communicationManager antes de conectar.');
+
 const socket = io(URLbase);
+
+console.log('communicationManager despues de conectar.');
+
+socket.on('connect', () => {
+  console.log('Conectado al servidor de Socket.IO:', socket.id);
+});
+
+socket.on('disconnect', () => {
+  console.log('Desconectado del servidor de Socket.IO');
+});
+
+export default socket;
 
 // PRODUCTS
 
@@ -17,17 +32,6 @@ async function getProducts() {
   }
 }
 
-// Obtener un producto por ID
-async function getProduct(id) {
-  try {
-    const response = await fetch(`${URLbase}/product/${id}`);
-    if (!response.ok) throw new Error('Error en la red');
-    return await response.json();
-  } catch (error) {
-    console.error(`Error al obtener el producto ${id}:`, error);
-  }
-}
-
 // Crear un nuevo producto
 async function postProduct(productData) {
   try {
@@ -37,7 +41,9 @@ async function postProduct(productData) {
       body: JSON.stringify(productData),
     });
     if (!response.ok) throw new Error('Error al crear producto');
-    return await response.json();
+    const createdProduct = await response.json();
+    socket.emit('productCreated', createdProduct); // Emitir evento al crear
+    return createdProduct;
   } catch (error) {
     console.error('Error al crear el producto:', error);
   }
@@ -52,7 +58,9 @@ async function updateProduct(id, productData) {
       body: JSON.stringify(productData),
     });
     if (!response.ok) throw new Error('Error al actualizar producto');
-    return await response.json();
+    const updatedProduct = await response.json();
+    socket.emit('productUpdated', updatedProduct);
+    return updatedProduct;
   } catch (error) {
     console.error(`Error al actualizar el producto ${id}:`, error);
   }
@@ -65,7 +73,9 @@ async function deleteProduct(id) {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Error al eliminar producto');
+    socket.emit('productDeleted', id); // Emitir evento al eliminar
     return await response.json();
+
   } catch (error) {
     console.error(`Error al eliminar el producto ${id}:`, error);
   }
@@ -96,7 +106,9 @@ async function postUser(userData) {
       body: JSON.stringify(userData),
     });
     if (!response.ok) throw new Error('Error al crear usuario');
-    return await response.json();
+    const createdUser = await response.json();
+    socket.emit('userCreated', createdUser); // Emitir evento al crear
+    return createdUser;
   } catch (error) {
     console.error('Error al crear el usuario:', error);
   }
@@ -111,7 +123,9 @@ async function updateUser(id, userData) {
       body: JSON.stringify(userData),
     });
     if (!response.ok) throw new Error('Error al actualizar usuario');
-    return await response.json();
+    const updatedUser = await response.json();
+    socket.emit('userUpdated', updatedUser); // Emitir evento al actualizar
+    return updatedUser;
   } catch (error) {
     console.error(`Error al actualizar el usuario ${id}:`, error);
   }
@@ -124,11 +138,13 @@ async function deleteUser(id) {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Error al eliminar usuario');
+    socket.emit('userDeleted', id); // Emitir evento al eliminar
     return await response.json();
   } catch (error) {
     console.error(`Error al eliminar el usuario ${id}:`, error);
   }
 }
+
 
 // ORDERS
 
@@ -136,21 +152,10 @@ async function deleteUser(id) {
 async function getOrders() {
   try {
     const response = await fetch(`${URLbase}/orders`);
-    if (!response.ok) throw new Error('Error en la red');
+    if (!response.ok) throw new Error('Error en la red al obtener órdenes');
     return await response.json();
   } catch (error) {
     console.error('Error al obtener órdenes:', error);
-  }
-}
-
-// Obtener una orden por ID
-async function getOrder(id) {
-  try {
-    const response = await fetch(`${URLbase}/order/${id}`);
-    if (!response.ok) throw new Error('Error en la red');
-    return await response.json();
-  } catch (error) {
-    console.error(`Error al obtener la orden ${id}:`, error);
   }
 }
 
@@ -163,7 +168,9 @@ async function postOrder(orderData) {
       body: JSON.stringify(orderData),
     });
     if (!response.ok) throw new Error('Error al crear orden');
-    return await response.json();
+    const createdOrder = await response.json();
+    socket.emit('orderCreated', createdOrder); // Emitir evento al crear
+    return createdOrder;
   } catch (error) {
     console.error('Error al crear la orden:', error);
   }
@@ -178,7 +185,9 @@ async function updateOrder(id, orderData) {
       body: JSON.stringify(orderData),
     });
     if (!response.ok) throw new Error('Error al actualizar orden');
-    return await response.json();
+    const updatedOrder = await response.json();
+    socket.emit('orderUpdated', updatedOrder); // Emitir evento al actualizar
+    return updatedOrder;
   } catch (error) {
     console.error(`Error al actualizar la orden ${id}:`, error);
   }
@@ -191,6 +200,7 @@ async function deleteOrder(id) {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Error al eliminar orden');
+    socket.emit('orderDeleted', id); // Emitir evento al eliminar
     return await response.json();
   } catch (error) {
     console.error(`Error al eliminar la orden ${id}:`, error);
@@ -201,7 +211,7 @@ async function deleteOrder(id) {
 async function getOrderProducts(orderId) {
   try {
     const response = await fetch(`${URLbase}/order/${orderId}/products`);
-    if (!response.ok) throw new Error('Error en la red');
+    if (!response.ok) throw new Error('Error en la red al obtener productos');
     return await response.json(); 
   } catch (error) {
     console.error(`Error al obtener los productos del pedido ${orderId}:`, error);
@@ -209,12 +219,11 @@ async function getOrderProducts(orderId) {
 }
 
 
-
 // EXPORTAR LOS MÉTODOS
 const communicationManager = {
+
   // Products
   getProducts,
-  getProduct,
   postProduct,
   updateProduct,
   deleteProduct,
@@ -227,7 +236,6 @@ const communicationManager = {
 
   // Orders
   getOrders,
-  getOrder,
   postOrder,
   updateOrder,
   deleteOrder,
