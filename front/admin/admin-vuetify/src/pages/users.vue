@@ -151,6 +151,8 @@ const createUser = async () => {
     const user = await communicationManager.postUser(newUser.value);
     users.value.push(user);
     closeModalCreateUser();
+    await fetchUsers(); 
+
   } catch (error) {
     console.error('Error al crear el usuario:', error);
     alert("Hubo un error al crear el usuario. Intenta nuevamente.");
@@ -170,6 +172,8 @@ const updateUser = async () => {
       users.value[index] = updatedUser;
     }
     closeModalEditUser();
+    await fetchUsers(); 
+
   } catch (error) {
     console.error('Error al actualizar el usuario:', error);
     alert("Hubo un error al actualizar el usuario. Intenta nuevamente.");
@@ -182,6 +186,8 @@ const deleteUser = async (id) => {
     try {
       await communicationManager.deleteUser(id);
       users.value = users.value.filter(user => user.ID_usuario !== id);
+      await fetchUsers(); 
+
     } catch (error) {
       console.error('Error al eliminar el usuario:', error);
     }

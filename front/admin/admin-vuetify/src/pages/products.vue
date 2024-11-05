@@ -10,7 +10,6 @@
       <v-divider></v-divider>
 
       <v-card-text>
-        <!-- Campo de búsqueda -->
         <v-text-field
           v-model="searchQuery"
           label="Buscar Producto"
@@ -101,16 +100,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { communicationManager } from '@/services/communicationManager.js';
 import { io } from 'socket.io-client';
+
+const URLbase = import.meta.env.VITE_API_URL;
+const socket = io(URLbase); // Conectar al servidor con Socket.io
 
 const isModalCreateProductOpen = ref(false);
 const isModalEditProductOpen = ref(false);
 const products = ref([]);
 const selectedProduct = ref({});
 const newProduct = ref({ nombre: '', descripcion: '', precio: '', stock: '', imagen: '' });
-const searchQuery = ref(''); // Añadido para el campo de búsqueda
+const searchQuery = ref('');
 
 // Abrir modal para crear producto
 const openModalCreateProduct = () => {
@@ -137,6 +139,25 @@ const closeModalEditProduct = () => {
 // Obtener todos los productos al montar el componente
 onMounted(async () => {
   await fetchProducts();
+
+  // Escuchar eventos de Socket.io para cambios en productos
+  socket.on('productCreated', (newProduct) => {
+    products.value.push(newProduct);
+  });
+
+  socket.on('productUpdated', (updatedProduct) => {
+    const index = products.value.findIndex(p => p.ID_producto === updatedProduct.ID_producto);
+    if (index !== -1) products.value[index] = updatedProduct;
+  });
+
+  socket.on('productDeleted', (deletedProductId) => {
+    products.value = products.value.filter(p => p.ID_producto !== deletedProductId);
+  });
+});
+
+// Desconectar el socket cuando el componente se desmonte
+onBeforeUnmount(() => {
+  socket.disconnect();
 });
 
 // Función para obtener productos
@@ -151,7 +172,8 @@ const fetchProducts = async () => {
 // Función para crear un nuevo producto
 const createProduct = async () => {
   try {
-    await communicationManager.postProduct(newProduct.value);
+    const createdProduct = await communicationManager.postProduct(newProduct.value);
+    socket.emit('productCreated', createdProduct); // Emitir el evento
     await fetchProducts(); // Refrescar la lista de productos
     closeModalCreateProduct();
   } catch (error) {
@@ -166,7 +188,8 @@ const updateProduct = async () => {
       console.error('El ID del producto no está definido.');
       return;
     }
-    await communicationManager.updateProduct(selectedProduct.value.ID_producto, selectedProduct.value);
+    const updatedProduct = await communicationManager.updateProduct(selectedProduct.value.ID_producto, selectedProduct.value);
+    socket.emit('productUpdated', updatedProduct); // Emitir el evento
     await fetchProducts(); // Refrescar la lista de productos
     closeModalEditProduct();
   } catch (error) {
@@ -180,6 +203,7 @@ const deleteProduct = async (id) => {
   if (confirmDelete) {
     try {
       await communicationManager.deleteProduct(id);
+      socket.emit('productDeleted', id); // Emitir el evento
       await fetchProducts(); // Refrescar la lista de productos
     } catch (error) {
       console.error('Error al eliminar el producto:', error);
@@ -195,7 +219,6 @@ const filteredProducts = computed(() => {
   const query = searchQuery.value.toLowerCase();
   return products.value.filter(product => product.nombre.toLowerCase().includes(query));
 });
-
 </script>
 
 <style scoped>

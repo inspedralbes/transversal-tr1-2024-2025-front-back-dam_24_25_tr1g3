@@ -234,4 +234,4 @@ const communicationManager = {
   getOrderProducts,
 };
 
-export { communicationManager };
+export { communicationManager, socket };
