@@ -90,7 +90,9 @@ app.post('/product', async (req, res) => {
     try {
         const productData = req.body;
         const newProduct = await communicationManager.postProduct(productData);
-        res.status(201).json(newProduct); // 201: Creado
+        
+        io.emit('productoCreado', newProduct); // Notifica a todos los clientes sobre el nuevo producto
+        res.status(201).json(newProduct);
     } catch (error) {
         res.status(500).json({ error: 'Error al crear el producto' });
     }
@@ -99,57 +101,44 @@ app.post('/product', async (req, res) => {
 app.put('/product/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const productData = req.body; // Debes pasar los nuevos datos
-        const updatedProduct = await communicationManager.updateProduct(Number(id), productData); // Convertir ID a número
+        const productData = req.body;
+        const updatedProduct = await communicationManager.updateProduct(Number(id), productData);
 
         if (!updatedProduct) {
             return res.status(404).json({ error: 'Producto no encontrado para actualizar' });
         }
 
-        res.json(updatedProduct); // Enviar el producto actualizado
+        io.emit('productoActualizado', updatedProduct); // Notifica a todos los clientes sobre el producto actualizado
+        res.json(updatedProduct);
     } catch (error) {
         res.status(500).json({ error: 'Error al actualizar el producto' });
     }
 });
 
+
 app.delete('/product/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await communicationManager.deleteProduct(Number(id)); // Convertir ID a número
+        const result = await communicationManager.deleteProduct(Number(id));
 
         if (!result) {
             return res.status(404).json({ error: 'Producto no encontrado para eliminar' });
         }
 
+        io.emit('productoEliminado', { id }); // Notifica a todos los clientes sobre la eliminación del producto
         res.json({ message: 'Producto eliminado correctamente' });
     } catch (error) {
         res.status(500).json({ error: 'Error al eliminar el producto' });
     }
 });
 
-// ROUTES FOR ORDERS
-
+// Rutas para pedidos
 app.get('/orders', async (req, res) => {
     try {
-        const orders = await communicationManager.getOrders(); // Obtener pedidos desde el communicationManager
+        const orders = await communicationManager.getOrders();
         res.json(orders);
     } catch (error) {
         res.status(500).json({ error: 'Error al obtener los pedidos' });
-    }
-});
-
-app.get('/order/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const order = await communicationManager.getOrder(Number(id)); // Convertir ID a número
-
-        if (!order) {
-            return res.status(404).json({ error: 'Pedido no encontrado' });
-        }
-
-        res.json(order);
-    } catch (error) {
-        res.status(500).json({ error: 'Error al obtener el pedido' });
     }
 });
 
@@ -157,23 +146,25 @@ app.post('/order', async (req, res) => {
     try {
         const orderData = req.body;
         const newOrder = await communicationManager.postOrder(orderData);
-        res.status(201).json(newOrder); // 201: Creado
+        
+        io.emit('pedidoCreado', newOrder); // Notifica a todos los clientes sobre el nuevo pedido
+        res.status(201).json(newOrder);
     } catch (error) {
         res.status(500).json({ error: 'Error al crear el pedido' });
     }
 });
 
-
 app.put('/order/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const orderData = req.body; // Nuevos datos del pedido
-        const updatedOrder = await communicationManager.updateOrder(Number(id), orderData); // Convertir ID a número
+        const orderData = req.body;
+        const updatedOrder = await communicationManager.updateOrder(Number(id), orderData);
 
         if (!updatedOrder) {
             return res.status(404).json({ error: 'Pedido no encontrado para actualizar' });
         }
 
+        io.emit('pedidoActualizado', updatedOrder); // Notifica a todos los clientes sobre el pedido actualizado
         res.json(updatedOrder);
     } catch (error) {
         res.status(500).json({ error: 'Error al actualizar el pedido' });
@@ -182,84 +173,65 @@ app.put('/order/:id', async (req, res) => {
 
 app.delete('/order/:num_pedido', async (req, res) => {
     const { num_pedido } = req.params;
-
     try {
-        const result = await communicationManager.deleteOrder(num_pedido); // Cambiar a comunicación a la base de datos
+        const result = await communicationManager.deleteOrder(num_pedido);
+        
+        io.emit('pedidoEliminado', { num_pedido }); // Notifica a todos los clientes sobre la eliminación del pedido
         res.json({ message: result.message });
     } catch (error) {
-        console.error('Error al eliminar el pedido:', error);
-        return res.status(500).json({ error: "Error al eliminar el pedido" });
+        res.status(500).json({ error: "Error al eliminar el pedido" });
     }
 });
 
-// ROUTES FOR USERS
-
-// GET DE USUARIOS
+// Rutas para usuarios
 app.get('/users', async (req, res) => {
     try {
-        const users = await communicationManager.getUsers(); // Obtener usuarios desde el communicationManager
-        res.json(users); // Enviar usuarios como JSON
+        const users = await communicationManager.getUsers();
+        res.json(users);
     } catch (error) {
         res.status(500).json({ error: 'Error al obtener usuarios' });
     }
 });
 
-// OBTENER USER POR ID
-app.get('/user/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user = await communicationManager.getUser(Number(id)); // Convertir ID a número
-
-        if (!user) {
-            return res.status(404).json({ error: 'Usuario no encontrado' });
-        }
-
-        res.json(user); // Enviar usuario como JSON
-    } catch (error) {
-        res.status(500).json({ error: 'Error al obtener el usuario' });
-    }
-});
-
-
-// CREAR USER 
 app.post('/user', async (req, res) => {
     try {
         const userData = req.body;
         const newUser = await communicationManager.postUser(userData);
-        res.status(201).json(newUser); // 201: Creado
+        
+        io.emit('usuarioCreado', newUser); // Notifica a todos los clientes sobre el nuevo usuario
+        res.status(201).json(newUser);
     } catch (error) {
         res.status(500).json({ error: 'Error al crear el usuario' });
     }
 });
 
-// UPDATE USER POR ID 
 app.put('/user/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const userData = req.body; // Nuevos datos del usuario
-        const updatedUser = await communicationManager.updateUser(Number(id), userData); // Convertir ID a número
+        const userData = req.body;
+        const updatedUser = await communicationManager.updateUser(Number(id), userData);
 
         if (!updatedUser) {
             return res.status(404).json({ error: 'Usuario no encontrado para actualizar' });
         }
 
-        res.json(updatedUser); // Enviar el usuario actualizado
+        io.emit('usuarioActualizado', updatedUser); // Notifica a todos los clientes sobre el usuario actualizado
+        res.json(updatedUser);
     } catch (error) {
         res.status(500).json({ error: 'Error al actualizar el usuario' });
     }
 });
 
-
-// ELIMINAR USER 
 app.delete('/user/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await communicationManager.deleteUser(Number(id)); // Convertir ID a número
+        const result = await communicationManager.deleteUser(Number(id));
 
         if (!result) {
             return res.status(404).json({ error: 'Usuario no encontrado para eliminar' });
         }
 
+        io.emit('usuarioEliminado', { id }); // Notifica a todos los clientes sobre la eliminación del usuario
         res.json({ message: 'Usuario eliminado correctamente' });
     } catch (error) {
         res.status(500).json({ error: 'Error al eliminar el usuario' });

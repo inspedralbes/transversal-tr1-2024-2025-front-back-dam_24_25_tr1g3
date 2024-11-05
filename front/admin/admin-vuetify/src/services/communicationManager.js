@@ -1,5 +1,8 @@
 const URLbase = import.meta.env.VITE_API_URL;
 console.log(URLbase);
+import { io } from 'socket.io-client';
+
+const socket = io(URLbase);
 
 // PRODUCTS
 
