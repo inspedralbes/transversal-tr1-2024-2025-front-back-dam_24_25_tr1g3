@@ -1,6 +1,24 @@
 const URLbase = import.meta.env.VITE_API_URL;
 console.log(URLbase);
 
+import { io } from 'socket.io-client';
+
+console.log('communicationManager antes de conectar.');
+
+const socket = io(URLbase);
+
+console.log('communicationManager despues de conectar.');
+
+socket.on('connect', () => {
+  console.log('Conectado al servidor de Socket.IO:', socket.id);
+});
+
+socket.on('disconnect', () => {
+  console.log('Desconectado del servidor de Socket.IO');
+});
+
+export default socket;
+
 // PRODUCTS
 
 // Obtener todos los productos

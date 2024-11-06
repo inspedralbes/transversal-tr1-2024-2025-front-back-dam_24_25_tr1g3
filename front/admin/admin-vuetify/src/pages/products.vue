@@ -7,7 +7,9 @@
         <v-btn @click="openModalCreateProduct" color="green">Crear Producto</v-btn>
       </v-card-title>
 
+
       <v-divider></v-divider>
+
 
       <v-card-text>
         <!-- Campo de búsqueda -->
@@ -17,6 +19,7 @@
           prepend-icon="mdi-magnify"
           clearable
         ></v-text-field>
+
 
         <v-row>
           <v-col
@@ -48,13 +51,14 @@
             </v-card>
           </v-col>
         </v-row>
-        <v-list v-if="filteredProducts.length === 0">
+        <v-list v-if="filteredProducts && filteredProducts.length === 0">
           <v-list-item>
             <v-list-item-content>No hay productos registrados.</v-list-item-content>
           </v-list-item>
         </v-list>
       </v-card-text>
     </v-card>
+
 
     <!-- Modal para crear Producto -->
     <v-dialog v-model="isModalCreateProductOpen" max-width="500px">
@@ -76,6 +80,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
 
     <!-- Modal para Editar Producto -->
     <v-dialog v-model="isModalEditProductOpen" max-width="500px">
@@ -100,10 +105,12 @@
   </v-container>
 </template>
 
+
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { communicationManager } from '@/services/communicationManager.js';
 import { io } from 'socket.io-client';
+
 
 const isModalCreateProductOpen = ref(false);
 const isModalEditProductOpen = ref(false);
@@ -112,16 +119,19 @@ const selectedProduct = ref({});
 const newProduct = ref({ nombre: '', descripcion: '', precio: '', stock: '', imagen: '' });
 const searchQuery = ref(''); // Añadido para el campo de búsqueda
 
+
 // Abrir modal para crear producto
 const openModalCreateProduct = () => {
   newProduct.value = { nombre: '', descripcion: '', precio: '', stock: '', imagen: '' };
   isModalCreateProductOpen.value = true;
 };
 
+
 // Cerrar modal de crear producto
 const closeModalCreateProduct = () => {
   isModalCreateProductOpen.value = false;
 };
+
 
 // Abrir modal para editar producto
 const openModalEditProduct = (product) => {
@@ -129,15 +139,18 @@ const openModalEditProduct = (product) => {
   isModalEditProductOpen.value = true;
 };
 
+
 // Cerrar modal de edición
 const closeModalEditProduct = () => {
   isModalEditProductOpen.value = false;
 };
 
+
 // Obtener todos los productos al montar el componente
 onMounted(async () => {
   await fetchProducts();
 });
+
 
 // Función para obtener productos
 const fetchProducts = async () => {
@@ -147,6 +160,7 @@ const fetchProducts = async () => {
     console.error('No se pudieron cargar los productos:', error);
   }
 };
+
 
 // Función para crear un nuevo producto
 const createProduct = async () => {
@@ -158,6 +172,7 @@ const createProduct = async () => {
     console.error('Error al crear el producto:', error);
   }
 };
+
 
 // Función para actualizar el producto
 const updateProduct = async () => {
@@ -174,6 +189,7 @@ const updateProduct = async () => {
   }
 };
 
+
 // Función para eliminar un producto
 const deleteProduct = async (id) => {
   const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este producto?');
@@ -187,8 +203,12 @@ const deleteProduct = async (id) => {
   }
 };
 
+
 // Computed para filtrar productos según la búsqueda
 const filteredProducts = computed(() => {
+  if (!Array.isArray(products.value)) {
+    return [];
+  }
   if (!searchQuery.value) {
     return products.value;
   }
@@ -196,18 +216,22 @@ const filteredProducts = computed(() => {
   return products.value.filter(product => product.nombre.toLowerCase().includes(query));
 });
 
+
 </script>
+
 
 <style scoped>
 .main-container {
   margin-top: 60px;
 }
 
+
 h1 {
   margin: 0;
   font-size: 24px;
   font-weight: bold;
 }
+
 
 .v-btn {
   margin: 10px 0;

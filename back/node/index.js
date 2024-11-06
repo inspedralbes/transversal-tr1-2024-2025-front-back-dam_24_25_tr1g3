@@ -13,9 +13,13 @@ app.use(cors()); // Habilitar CORS
 app.use(express.json());
 
 const server = http.createServer(app);
-const io = new Server(server);
-
-const port = process.env.PORT || 3000; // Usa PORT del archivo .env o 3000 por defecto
+const io = new Server(server, {
+    cors: {
+        origin: '*',   
+        methods: ['GET', 'POST','PUT']  
+    }
+});
+const port = process.env.PORT // Usa PORT del archivo .env o 3000 por defecto
 
 // Conectar a la base de datos MySQL
 const dbConfig = {
