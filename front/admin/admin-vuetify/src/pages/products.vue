@@ -168,6 +168,7 @@ const createProduct = async () => {
     await communicationManager.postProduct(newProduct.value);
     await fetchProducts(); // Refrescar la lista de productos
     closeModalCreateProduct();
+    await fetchProducts(); 
   } catch (error) {
     console.error('Error al crear el producto:', error);
   }

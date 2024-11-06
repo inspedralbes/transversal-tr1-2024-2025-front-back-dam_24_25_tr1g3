@@ -224,6 +224,8 @@ try {
   const order = await communicationManager.postOrder(newOrder.value);
   orders.value.push(order);
   closeModalCreateOrder();
+  await fetchOrders();
+
 } catch (error) {
   console.error('Error al crear el pedido:', error);
 }
@@ -243,6 +245,7 @@ try {
     orders.value[index] = updatedOrder;
   }
   closeModalEditOrder();
+  await fetchOrders();
 } catch (error) {
   console.error('Error al actualizar el pedido:', error);
 }
@@ -256,6 +259,8 @@ if (confirmDelete) {
   try {
     await communicationManager.deleteOrder(id);
     orders.value = orders.value.filter(order => order.num_pedido !== id);
+    await fetchOrders();
+
   } catch (error) {
     console.error('Error al eliminar el pedido:', error);
   }
