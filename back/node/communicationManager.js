@@ -4,9 +4,9 @@ import mysql from 'mysql2/promise';
 // Crear conexión a la base de datos usando mysql2/promise
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'a24bermirpre',  // Usuario proporcionado
-    password: process.env.DB_PASSWORD || 'InstitutPedralbes_2024',  // Contraseña proporcionada
-    database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos
+    user: process.env.DB_USER || 'a23albrobfon',  // Usuario proporcionado
+    password: process.env.DB_PASSWORD || 'Inspedralbes2324',  // Contraseña proporcionada
+    database: process.env.DB_NAME || 'a23albrobfon_Tr1',  // Nombre de la base de datos
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -16,17 +16,29 @@ const pool = mysql.createPool({
 
 // Obtener todos los productos
 async function getProducts() {
-    const [products] = await pool.query('SELECT * FROM Producto');
-    return products; // Devolver la lista de productos de la base de datos
+    try {
+        const [products] = await pool.query('SELECT * FROM Producto');
+        return products; // Devolver la lista de productos
+    } catch (error) {
+        console.error('Error al obtener productos:', error);
+        throw error; // Lanzamos el error para que lo capture el manejador del GET
+    }
 }
 
 // Obtener un producto por ID
 async function getProduct(id) {
-    const [product] = await pool.query('SELECT * FROM Producto WHERE ID_producto = ?', [id]);
-    if (product.length === 0) {
-        throw new Error('Producto no encontrado');
+    try {
+        const [product] = await pool.query('SELECT * FROM Producto WHERE ID_producto = ?', [id]);
+        
+        if (product.length === 0) {
+            return null; // No encontramos el producto, devolvemos null
+        }
+        
+        return product[0]; // Retornamos el primer producto encontrado
+    } catch (error) {
+        console.error('Error al obtener el producto:', error);
+        throw error; // Lanzamos el error para que lo capture el manejador del GET
     }
-    return product[0]; // Devolver el producto encontrado
 }
 
 // Insertar un nuevo producto

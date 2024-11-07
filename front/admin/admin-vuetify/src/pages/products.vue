@@ -67,7 +67,7 @@
           <v-text-field v-model="newProduct.descripcion" label="Descripción" />
           <v-text-field v-model="newProduct.precio" label="Precio" type="number" />
           <v-text-field v-model="newProduct.stock" label="Stock" type="number" />
-          <v-text-field v-model="newProduct.imagen" label="URL de la Imagen" />
+          <v-file-input v-model="newProductImage" label="Imagen del Producto" accept="image/*" />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -103,13 +103,13 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { communicationManager } from '@/services/communicationManager.js';
-import { io } from 'socket.io-client';
 
 const isModalCreateProductOpen = ref(false);
 const isModalEditProductOpen = ref(false);
 const products = ref([]);
 const selectedProduct = ref({});
 const newProduct = ref({ nombre: '', descripcion: '', precio: '', stock: '', imagen: '' });
+const newProductImage = ref({});
 const searchQuery = ref(''); // Añadido para el campo de búsqueda
 
 // Abrir modal para crear producto
@@ -151,9 +151,35 @@ const fetchProducts = async () => {
 // Función para crear un nuevo producto
 const createProduct = async () => {
   try {
-    await communicationManager.postProduct(newProduct.value);
-    await fetchProducts(); // Refrescar la lista de productos
-    closeModalCreateProduct();
+    // Verifica si se ha seleccionado una imagen
+    if (newProductImage.value && newProductImage.value.size > 0) {
+      // Genera un nombre de archivo único para la imagen
+      const imageName = `${Date.now()}.jpg`;
+
+      // Asigna el nombre de la imagen al campo correspondiente
+      newProduct.value.imagen = imageName;
+    }
+
+    // Crear un nuevo objeto FormData
+    const formData = new FormData();
+
+    // Agregar los datos del producto al FormData
+    formData.append('nombre', newProduct.value.nombre);
+    formData.append('descripcion', newProduct.value.descripcion);
+    formData.append('precio', newProduct.value.precio);
+    formData.append('stock', newProduct.value.stock);
+
+    // Agregar la imagen al FormData
+    if (newProductImage.value && newProductImage.value.size > 0) {
+      formData.append('image', newProductImage); // newProductImage es el archivo seleccionado
+    }
+    // Enviar el producto y la imagen al servidor
+    const response = await communicationManager.postProduct(formData);
+
+    if (response) {
+      await fetchProducts(); // Refrescar la lista de productos
+      closeModalCreateProduct(); // Cerrar el modal
+    }
   } catch (error) {
     console.error('Error al crear el producto:', error);
   }

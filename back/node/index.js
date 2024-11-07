@@ -4,6 +4,9 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors'; // Importar CORS
 import mysql from 'mysql2/promise'; // Importar MySQL
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 // Importar communicationManager.js
 import { communicationManager } from './communicationManager.js'; // La extensión .js es obligatoria
@@ -11,21 +14,26 @@ import { communicationManager } from './communicationManager.js'; // La extensi�
 const app = express();
 app.use(cors()); // Habilitar CORS
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.raw({ type: 'image/*', limit: '15mb' }));
+
+// Obtener la ruta del directorio actual
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const server = http.createServer(app);
 const io = new Server(server);
-
 const port = process.env.PORT || 3000; // Usa PORT del archivo .env o 3000 por defecto
 
 // Conectar a la base de datos MySQL
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'a24bermirpre',  // Usuario proporcionado
-    password: process.env.DB_PASSWORD || 'InstitutPedralbes_2024',  // Contraseña proporcionada
-    database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos
+    user: process.env.DB_USER || 'a23albrobfon',  // Usuario proporcionado
+    password: process.env.DB_PASSWORD || 'Inspedralbes2324',  // Contraseña proporcionada
+    database: process.env.DB_NAME || 'a23albrobfon_Tr1',  // Nombre de la base de datos
 };
 let connection;
-
+const uploadDirectory = path.join(__dirname, 'product_images');
 (async () => {
     try {
         connection = await mysql.createConnection(dbConfig);
@@ -80,9 +88,38 @@ app.get('/product/:id', async (req, res) => {
 app.post('/product', async (req, res) => {
     try {
         const productData = req.body;
+        const image = req.body.image ? req.body.image : null; // Aseguramos que se haya enviado una imagen
+
+        if (!image) {
+            return res.status(400).json({ error: 'Se debe incluir una imagen para el producto.' });
+        }
+
+        // Llamamos a la función para insertar el producto en la base de datos
         const newProduct = await communicationManager.postProduct(productData);
-        res.status(201).json(newProduct); // 201: Creado
+
+        // Guardamos la imagen con el nombre del ID del producto
+        const imagePath = path.join(uploadDirectory, `${newProduct.ID_producto}.jpg`);
+
+        // Verificamos si el directorio existe, si no, lo creamos
+        if (!fs.existsSync(uploadDirectory)) {
+            fs.mkdirSync(uploadDirectory, { recursive: true });
+        }
+
+        // Guardamos la imagen en el directorio
+        fs.writeFileSync(imagePath, image.data); // `image.data` contiene los datos binarios de la imagen
+
+        // Actualizamos el producto con la ruta de la imagen
+        const imageUrl = `/product_images/${newProduct.ID_producto}.jpg`;
+        await pool.query('UPDATE Producto SET imagen = ? WHERE ID_producto = ?', [imageUrl, newProduct.ID_producto]);
+
+        res.status(201).json({
+            message: 'Producto y su imagen creados correctamente',
+            product: newProduct,
+            imageUrl
+        });
+
     } catch (error) {
+        console.error('Error al crear el producto:', error);
         res.status(500).json({ error: 'Error al crear el producto' });
     }
 });

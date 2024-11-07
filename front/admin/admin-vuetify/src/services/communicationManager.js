@@ -26,13 +26,13 @@ async function getProduct(id) {
 }
 
 // Crear un nuevo producto
-async function postProduct(productData) {
+async function postProduct(formData) {
   try {
     const response = await fetch(`${URLbase}/product`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(productData),
+      body: formData, // Enviar FormData directamente
     });
+
     if (!response.ok) throw new Error('Error al crear producto');
     return await response.json();
   } catch (error) {
