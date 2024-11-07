@@ -67,7 +67,7 @@
           <v-text-field v-model="newProduct.descripcion" label="Descripción" />
           <v-text-field v-model="newProduct.precio" label="Precio" type="number" />
           <v-text-field v-model="newProduct.stock" label="Stock" type="number" />
-          <v-file-input v-model="newProductImage" label="Imagen del Producto" accept="image/*" />
+          <v-file-input v-model="newProductImage" label="Imagen del Producto" accept="image/*" type="file" />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -158,8 +158,8 @@ const createProduct = async () => {
 
       // Asigna el nombre de la imagen al campo correspondiente
       newProduct.value.imagen = imageName;
-    }
-
+    } 
+    console.log(newProductImage.value)
     // Crear un nuevo objeto FormData
     const formData = new FormData();
 
@@ -170,9 +170,23 @@ const createProduct = async () => {
     formData.append('stock', newProduct.value.stock);
 
     // Agregar la imagen al FormData
-    if (newProductImage.value && newProductImage.value.size > 0) {
-      formData.append('image', newProductImage); // newProductImage es el archivo seleccionado
+    if (newProductImage.value && newProductImage.value instanceof File) {
+      formData.append('image', newProductImage.value); // newProductImage es el archivo seleccionado
+    } else {
+      console.error('No se ha seleccionado ninguna imagen o el valor no es un archivo');
     }
+
+    // Log para ver qué contiene el FormData
+    formData.forEach((value, key) => {
+      if (key === 'image') {
+        console.log(`${key}:`, value.name);  // Imprime solo el nombre del archivo
+        console.log(`${key} size:`, value.size);  // Imprime el tamaño del archivo
+        console.log(`${key} type:`, value.type);  // Imprime el tipo de archivo (ej. image/jpeg)
+      } else {
+        console.log(`${key}:`, value);  // Para los otros campos, simplemente muestra el valor
+      }  // Muestra el nombre del campo y su valor
+    });
+
     // Enviar el producto y la imagen al servidor
     const response = await communicationManager.postProduct(formData);
 
