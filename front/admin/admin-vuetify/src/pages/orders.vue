@@ -46,8 +46,8 @@
         <span class="headline">Crear Pedido</span>
       </v-card-title>
       <v-card-text>
-        <v-text-field v-model="newOrder.ID_usuario" label="ID Usuario" type="number" disabled />
-        <v-text-field v-model="newOrder.total_pedido" label="Total del Pedido" type="number" disabled />
+        <v-text-field v-model="newOrder.ID_usuario" label="ID Usuario" type="number"  />
+        <v-text-field v-model="newOrder.total_pedido" label="Total del Pedido" type="number"  />
         <v-select
           v-model="newOrder.estado"
           :items="['Pendiente', 'Completado']"
@@ -85,9 +85,9 @@
         <span class="headline">Editar Pedido</span>
       </v-card-title>
       <v-card-text>
-        <v-text-field v-model="selectedOrder.ID_usuario" label="ID Usuario" type="number" />
-        <v-text-field v-model="selectedOrder.total_pedido" label="Total del Pedido" type="number" />
-        <v-select
+        <v-text-field v-model="selectedOrder.ID_usuario" label="ID Usuario" type="number"  readonly />
+        <v-text-field v-model="selectedOrder.total_pedido" label="Total del Pedido" type="number" readonly  />
+       <v-select
           v-model="selectedOrder.estado"
           :items="['Pendiente', 'Completado']"
           label="Estado"
@@ -305,7 +305,7 @@ return orders.value.filter(order =>
 
 <style scoped>
 .main-container {
-padding-top: 60px;
+padding-top: 100px;
 }
 h1 {
 margin: 0;
