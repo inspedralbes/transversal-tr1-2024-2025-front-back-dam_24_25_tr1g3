@@ -17,7 +17,7 @@ socket.on('disconnect', () => {
   console.log('Desconectado del servidor de Socket.IO');
 });
 
-export default socket;
+export { socket };
 
 // PRODUCTS
 

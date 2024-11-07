@@ -168,6 +168,8 @@ app.put('/order/:id', async (req, res) => {
             return res.status(404).json({ error: 'Pedido no encontrado para actualizar' });
         }
 
+        io.emit('orderUpdated',updatedOrder)
+
         res.json(updatedOrder);
     } catch (error) {
         res.status(500).json({ error: 'Error al actualizar el pedido' });

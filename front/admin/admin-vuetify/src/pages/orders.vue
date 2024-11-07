@@ -131,6 +131,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { communicationManager } from '@/services/communicationManager.js';
+import { socket } from '@/services/communicationManager.js';
 
 
 const isModalCreateOrderOpen = ref(false);
@@ -290,6 +291,21 @@ const closeProductModal = () => {
 isModalProductOpen.value = false;
 orderProducts.value = [];
 };
+
+// Escuchar el evento cuando el servidor emite el cambio en el estado de un pedido
+socket.on('orderUpdated', (orderUpdated) => {
+
+  // Actualiza la lista de pedidos con la nueva orden (esto depende de tu lógica)
+  const index = orders.value.findIndex(order => order.num_pedido === orderUpdated.num_pedido);
+  
+  if (index !== -1) {
+    // Si el pedido ya existe, actualiza la información
+    orders.value[index] = orderUpdated;
+  } else {
+    // Si no existe, agrega el nuevo pedido a la lista
+    orders.value.push(orderUpdated);
+  }
+});
 
 
 // Filtrar pedidos con la búsqueda
