@@ -180,7 +180,7 @@ app.put('/product/:id', async (req, res) => {
 
         // Si se proporciona una nueva imagen, actualizamos la propiedad `imagen` en `updatedData`
         if (files.image && files.image[0] && files.image[0].filepath) {
-            const imageName = `${fields.ID_producto}`;
+            const imageName = `${fields.ID_producto}.jpg`;
             const imagePath = path.join(uploadDirectory, imageName);
 
             // Mover el archivo de la imagen al directorio de subida
@@ -211,7 +211,13 @@ app.delete('/product/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const result = await communicationManager.deleteProduct(Number(id)); // Convertir ID a número
-        
+        fs.rm(`product_images/${id}.jpg`, { force: true }, (err) => {
+            if (err) {
+              console.error('Error al eliminar el archivo:', err);
+            } else {
+              console.log('Archivo eliminado correctamente');
+            }
+          });
         if (!result) {
             return res.status(404).json({ error: 'Producto no encontrado para eliminar' });
         }
