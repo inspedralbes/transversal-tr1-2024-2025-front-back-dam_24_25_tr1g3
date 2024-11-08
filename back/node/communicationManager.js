@@ -1,5 +1,15 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
+import multer from "multer";
+import path from "path";
+import * as fs from 'fs';
+import express from 'express';
+import cors from 'cors';
+
+
+const app = express();
+app.use(cors()); // Habilitar CORS
+app.use(express.json());
 
 // Crear conexión a la base de datos usando mysql2/promise
 const pool = mysql.createPool({
@@ -29,11 +39,37 @@ async function getProduct(id) {
     return product[0]; // Devolver el producto encontrado
 }
 
+
+
+// imagen
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, "public/");
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      cb(null, uniqueSuffix + path.extname(file.originalname));
+    },
+  });
+  const upload = multer({ storage: storage });
+  
+  app.use("/assets", express.static("public"));
+  
+
+
 // Insertar un nuevo producto
 async function postProduct(productData) {
     try {
-        const { nombre, descripcion, precio, stock } = productData;
+        const { nombre, descripcion, precio, stock } = req.body;
 
+        const fotoRuta = req.file.path;
+    
+        const filename = fotoRuta.split("\\").pop();
+    
+        console.log(filename);        
+
+        const productData = req.body + fotoRuta;
         // Inserción en la base de datos
         const [result] = await pool.query('INSERT INTO Producto (nombre, descripcion, precio, stock) VALUES (?, ?, ?, ?)', 
             [nombre, descripcion, precio, stock]);

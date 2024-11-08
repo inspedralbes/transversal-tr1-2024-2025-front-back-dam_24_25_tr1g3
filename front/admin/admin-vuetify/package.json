@@ -12,6 +12,7 @@
     "admin-vuetify": "file:",
     "core-js": "^3.37.1",
     "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
     "roboto-fontface": "*",
     "socket.io-client": "^4.8.1",
     "vue": "^3.4.31",

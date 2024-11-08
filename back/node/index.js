@@ -4,6 +4,9 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors'; // Importar CORS
 import mysql from 'mysql2/promise'; // Importar MySQL
+import multer from "multer"; // Para guardar imagenes
+import path from "path"; // Para crear rutas donde guardar las imagenes
+import * as fs from 'fs'; // Para poder leer el sistema de ficheros
 
 // Importar communicationManager.js
 import { communicationManager } from './communicationManager.js'; // La extensión .js es obligatoria
@@ -15,11 +18,13 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: '*',   
-        methods: ['GET', 'POST','PUT']  
+        origin: '*',
+        methods: ['GET', 'POST', 'PUT']
     }
 });
 const port = process.env.PORT // Usa PORT del archivo .env o 3000 por defecto
+
+app.use("/assets", express.static("public"));
 
 // Conectar a la base de datos MySQL
 const dbConfig = {
@@ -28,6 +33,19 @@ const dbConfig = {
     password: process.env.DB_PASSWORD || 'InstitutPedralbes_2024',  // Contraseña proporcionada
     database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos
 };
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "public/");
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    },
+});
+
+const upload = multer({ storage: storage });
+
 let connection;
 
 (async () => {
@@ -46,7 +64,7 @@ io.on('connection', (socket) => {
         console.log('Mensaje recibido:', msg);
         socket.emit('respuesta', 'Mensaje recibido en el servidor');
     });
- 
+
     socket.on('disconnect', () => {
         console.log('Un usuario se ha desconectado');
     });
@@ -69,11 +87,11 @@ app.get('/product/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const product = await communicationManager.getProduct(Number(id)); // Convertir ID a número
-        
+
         if (!product) {
             return res.status(404).json({ error: 'Producto no encontrado' });
         }
-        
+
         res.json(product); // Enviar producto como JSON
     } catch (error) {
         console.error(error); // Agrega esto para ver el error en la consola
@@ -81,7 +99,7 @@ app.get('/product/:id', async (req, res) => {
     }
 });
 
-app.post('/product', async (req, res) => {
+app.post('/product', upload.single("imatge"), async (req, res) => {
     try {
         const productData = req.body;
         const newProduct = await communicationManager.postProduct(productData);
@@ -96,11 +114,11 @@ app.put('/product/:id', async (req, res) => {
         const { id } = req.params;
         const productData = req.body; // Debes pasar los nuevos datos
         const updatedProduct = await communicationManager.updateProduct(Number(id), productData); // Convertir ID a número
-        
+
         if (!updatedProduct) {
             return res.status(404).json({ error: 'Producto no encontrado para actualizar' });
         }
-        
+
         res.json(updatedProduct); // Enviar el producto actualizado
     } catch (error) {
         res.status(500).json({ error: 'Error al actualizar el producto' });
@@ -111,11 +129,11 @@ app.delete('/product/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const result = await communicationManager.deleteProduct(Number(id)); // Convertir ID a número
-        
+
         if (!result) {
             return res.status(404).json({ error: 'Producto no encontrado para eliminar' });
         }
-        
+
         res.json({ message: 'Producto eliminado correctamente' });
     } catch (error) {
         res.status(500).json({ error: 'Error al eliminar el producto' });
@@ -168,7 +186,7 @@ app.put('/order/:id', async (req, res) => {
             return res.status(404).json({ error: 'Pedido no encontrado para actualizar' });
         }
 
-        io.emit('orderUpdated',updatedOrder)
+        io.emit('orderUpdated', updatedOrder)
 
         res.json(updatedOrder);
     } catch (error) {

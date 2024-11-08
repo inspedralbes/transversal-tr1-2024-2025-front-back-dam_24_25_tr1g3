@@ -37,7 +37,7 @@
                 <p>Precio: {{ product.precio }}€</p>
                 <p>Stock: {{ product.stock }}</p>
                 <v-img
-                  :src="product.imagen"
+                  :src="IMG_BASE_URL+product.imagen"
                   max-width="200"
                   max-height="200"
                   contain
@@ -71,7 +71,7 @@
           <v-text-field v-model="newProduct.descripcion" label="Descripción" />
           <v-text-field v-model="newProduct.precio" label="Precio" type="number" />
           <v-text-field v-model="newProduct.stock" label="Stock" type="number" />
-          <v-text-field v-model="newProduct.imagen" label="URL de la Imagen" />
+          <v-file-input v-model="newProduct.imagen" label="Imagen" />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -93,7 +93,7 @@
           <v-text-field v-model="selectedProduct.descripcion" label="Descripción" />
           <v-text-field v-model="selectedProduct.precio" label="Precio" type="number" />
           <v-text-field v-model="selectedProduct.stock" label="Stock" type="number" />
-          <v-text-field v-model="selectedProduct.imagen" label="URL de la Imagen" />
+          <v-file-input v-model="selectedProduct.imagen" label="Imagen" />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -111,6 +111,7 @@ import { ref, onMounted, computed } from 'vue';
 import { communicationManager } from '@/services/communicationManager.js';
 import { io } from 'socket.io-client';
 
+const IMG_BASE_URL = ref(`${import.meta.env.VITE_API_URL}/assets/`)
 
 const isModalCreateProductOpen = ref(false);
 const isModalEditProductOpen = ref(false);
@@ -156,6 +157,8 @@ onMounted(async () => {
 const fetchProducts = async () => {
   try {
     products.value = await communicationManager.getProducts();
+    console.log(products.value);
+    
   } catch (error) {
     console.error('No se pudieron cargar los productos:', error);
   }
