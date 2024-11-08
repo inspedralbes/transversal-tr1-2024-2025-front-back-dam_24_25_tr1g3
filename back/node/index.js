@@ -5,6 +5,8 @@ import { Server } from 'socket.io';
 import cors from 'cors'; // Importar CORS
 import mysql from 'mysql2/promise'; // Importar MySQL
 import path from 'path';
+import formidable from 'formidable';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -15,7 +17,6 @@ const app = express();
 app.use(cors()); // Habilitar CORS
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.raw({ type: 'image/*', limit: '15mb' }));
 
 // Obtener la ruta del directorio actual
 const __filename = fileURLToPath(import.meta.url);
@@ -34,6 +35,10 @@ const dbConfig = {
 };
 let connection;
 const uploadDirectory = path.join(__dirname, 'product_images');
+
+// Servir archivos estáticos desde el directorio de imágenes
+app.use('/product_images', express.static(uploadDirectory));
+
 (async () => {
     try {
         connection = await mysql.createConnection(dbConfig);
@@ -85,59 +90,121 @@ app.get('/product/:id', async (req, res) => {
     }
 });
 
+app.get('/product/image/:imageName', (req, res) => {
+    const imageName = req.params.imageName;
+    const imagePath = path.join(uploadDirectory, imageName);
+
+    // Verificar si el archivo existe
+    if (fs.existsSync(imagePath)) {
+        res.sendFile(imagePath);
+    } else {
+        res.status(404).json({ error: 'Imagen no encontrada' });
+    }
+});
+
 app.post('/product', async (req, res) => {
-    try {
-        const productData = req.body;
-        const image = req.body.image ? req.body.image : null; // Aseguramos que se haya enviado una imagen
+    const form = formidable({
+        multiples: false,      // Permite un solo archivo
+        keepExtensions: true,  // Mantiene la extensión original
+        uploadDir: uploadDirectory, // Directorio temporal
+    });
+
+    form.parse(req, async (err, fields, files) => {
+        if (err) {
+            console.error('Error parsing form:', err);
+            return res.status(400).json({ error: 'Error procesando el formulario' });
+        }
+
+        const productData = fields;
+        const image = files.image ? files.image[0] : null;  // Accede al primer archivo si es un array
 
         if (!image) {
             return res.status(400).json({ error: 'Se debe incluir una imagen para el producto.' });
         }
 
-        // Llamamos a la función para insertar el producto en la base de datos
-        const newProduct = await communicationManager.postProduct(productData);
+        try {
+            const newProduct = await communicationManager.postProduct(productData);
 
-        // Guardamos la imagen con el nombre del ID del producto
-        const imagePath = path.join(uploadDirectory, `${newProduct.ID_producto}.jpg`);
+            const imagePath = path.join(uploadDirectory, `${newProduct.ID_producto}.jpg`);
 
-        // Verificamos si el directorio existe, si no, lo creamos
-        if (!fs.existsSync(uploadDirectory)) {
-            fs.mkdirSync(uploadDirectory, { recursive: true });
+            if (!fs.existsSync(uploadDirectory)) {
+                fs.mkdirSync(uploadDirectory, { recursive: true });
+            }
+            console.log('Ruta del archivo temporal:', image?.filepath);  // Verifica si `image.filepath` está definido
+
+            fs.copyFileSync(image.filepath, imagePath);
+
+            const imageUrl = `${newProduct.ID_producto}.jpg`;
+            const set = "imagen";
+            const where = "ID_producto";
+            await communicationManager.updateDatabase(set, imageUrl, where, newProduct.ID_producto);
+
+            res.status(201).json({
+                message: 'Producto y su imagen creados correctamente',
+                product: newProduct,
+                imageUrl
+            });
+        } catch (error) {
+            console.error('Error al crear el producto:', error);
+            res.status(500).json({ error: 'Error al crear el producto' });
         }
-
-        // Guardamos la imagen en el directorio
-        fs.writeFileSync(imagePath, image.data); // `image.data` contiene los datos binarios de la imagen
-
-        // Actualizamos el producto con la ruta de la imagen
-        const imageUrl = `/product_images/${newProduct.ID_producto}.jpg`;
-        await pool.query('UPDATE Producto SET imagen = ? WHERE ID_producto = ?', [imageUrl, newProduct.ID_producto]);
-
-        res.status(201).json({
-            message: 'Producto y su imagen creados correctamente',
-            product: newProduct,
-            imageUrl
-        });
-
-    } catch (error) {
-        console.error('Error al crear el producto:', error);
-        res.status(500).json({ error: 'Error al crear el producto' });
-    }
+    });
 });
 
 app.put('/product/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const productData = req.body; // Debes pasar los nuevos datos
-        const updatedProduct = await communicationManager.updateProduct(Number(id), productData); // Convertir ID a número
-        
-        if (!updatedProduct) {
-            return res.status(404).json({ error: 'Producto no encontrado para actualizar' });
+    const { id } = req.params;
+    
+    // Utilizamos formidable para procesar el formulario con los datos del producto y la imagen
+    const form = formidable({
+        multiples: false,      // Permite un solo archivo
+        keepExtensions: true,  // Mantiene la extensión original
+        uploadDir: uploadDirectory, // Directorio temporal
+    });
+
+    // Procesar los datos del formulario y los archivos
+    form.parse(req, async (err, fields, files) => {
+        if (err) {
+            console.error('Error al procesar el formulario:', err);
+            return res.status(500).json({ error: 'Error al procesar el formulario' });
         }
-        
-        res.json(updatedProduct); // Enviar el producto actualizado
-    } catch (error) {
-        res.status(500).json({ error: 'Error al actualizar el producto' });
-    }
+
+        // Crear el objeto con los datos actualizados del producto
+        const updatedData = {
+            ID_producto: fields.ID_producto,
+            nombre: fields.nombre,
+            descripcion: fields.descripcion,
+            precio: fields.precio,
+            stock: fields.stock,
+            imagen: fields.imagen, // Mantener el nombre de la imagen actual si no se proporciona una nueva
+        };
+
+        // Si se proporciona una nueva imagen, actualizamos la propiedad `imagen` en `updatedData`
+        if (files.image && files.image[0] && files.image[0].filepath) {
+            const imageName = `${fields.ID_producto}`;
+            const imagePath = path.join(uploadDirectory, imageName);
+
+            // Mover el archivo de la imagen al directorio de subida
+            fs.renameSync(files.image[0].filepath, imagePath);
+
+            // Actualizamos el campo `imagen` con el nuevo nombre
+            updatedData.imagen = imageName;
+        }
+
+        // Ahora actualizamos el producto en la base de datos
+        try {
+            // Llamar a la función que actualiza el producto en la base de datos
+            const updatedProduct = await communicationManager.updateProduct(Number(id), updatedData);
+
+            if (!updatedProduct) {
+                return res.status(404).json({ error: 'Producto no encontrado para actualizar' });
+            }
+
+            res.json(updatedProduct); // Enviar el producto actualizado como respuesta
+        } catch (error) {
+            console.error('Error al actualizar el producto:', error);
+            res.status(500).json({ error: 'Error al actualizar el producto' });
+        }
+    });
 });
 
 app.delete('/product/:id', async (req, res) => {

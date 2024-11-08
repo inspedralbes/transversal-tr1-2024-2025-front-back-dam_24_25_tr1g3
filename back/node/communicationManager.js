@@ -14,6 +14,18 @@ const pool = mysql.createPool({
 
 // PRODUCTS
 
+//Actualizar
+async function updateDatabase(set, setValor, where, whereValor){
+    try {
+        const query = `UPDATE Producto SET ${set} = ? WHERE ${where} = ?`;
+        await pool.query(query, [setValor, whereValor]);
+        console.log('Actualitzat correctament.');
+    } catch (error) {
+        console.error('Error al Actualitzar', error);
+        throw error;
+    }
+}
+
 // Obtener todos los productos
 async function getProducts() {
     try {
@@ -314,6 +326,7 @@ const communicationManager = {
     getProduct,
     postProduct,
     updateProduct,
+    updateDatabase,
     deleteProduct,
     getOrderProducts,
     deleteOrderProduct, // Agregar la función de eliminación

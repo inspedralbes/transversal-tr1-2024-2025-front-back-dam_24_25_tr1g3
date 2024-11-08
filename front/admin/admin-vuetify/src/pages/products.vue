@@ -34,7 +34,7 @@
                 <p>Precio: {{ product.precio }}€</p>
                 <p>Stock: {{ product.stock }}</p>
                 <v-img
-                  :src="product.imagen"
+                  :src= "`${URLbase}/product/image/${product.imagen}`"
                   max-width="200"
                   max-height="200"
                   contain
@@ -88,7 +88,7 @@
           <v-text-field v-model="selectedProduct.descripcion" label="Descripción" />
           <v-text-field v-model="selectedProduct.precio" label="Precio" type="number" />
           <v-text-field v-model="selectedProduct.stock" label="Stock" type="number" />
-          <v-text-field v-model="selectedProduct.imagen" label="URL de la Imagen" />
+          <v-file-input v-model="newProductImage" label="Imagen del Producto" accept="image/*" type="file" />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -111,6 +111,7 @@ const selectedProduct = ref({});
 const newProduct = ref({ nombre: '', descripcion: '', precio: '', stock: '', imagen: '' });
 const newProductImage = ref({});
 const searchQuery = ref(''); // Añadido para el campo de búsqueda
+const URLbase = import.meta.env.VITE_API_URL;
 
 // Abrir modal para crear producto
 const openModalCreateProduct = () => {
@@ -206,9 +207,43 @@ const updateProduct = async () => {
       console.error('El ID del producto no está definido.');
       return;
     }
-    await communicationManager.updateProduct(selectedProduct.value.ID_producto, selectedProduct.value);
-    await fetchProducts(); // Refrescar la lista de productos
-    closeModalEditProduct();
+
+    // Crear un nuevo objeto FormData para enviar los datos y la imagen
+    const formData = new FormData();
+    
+    // Agregar los datos del producto al FormData
+    formData.append('ID_producto', selectedProduct.value.ID_producto);
+    formData.append('nombre', selectedProduct.value.nombre);
+    formData.append('descripcion', selectedProduct.value.descripcion);
+    formData.append('precio', selectedProduct.value.precio);
+    formData.append('stock', selectedProduct.value.stock);
+    formData.append('imagen', selectedProduct.value.imagen); // Nombre de la imagen actual, en caso de que no se actualice
+    
+    // Agregar la nueva imagen si se seleccionó una
+    if (newProductImage.value && newProductImage.value instanceof File) {
+      formData.append('image', newProductImage.value);
+    } else {
+      console.log('No se ha seleccionado ninguna imagen nueva o el valor no es un archivo');
+    }
+
+    // Log para ver qué contiene el FormData
+    formData.forEach((value, key) => {
+      if (key === 'image') {
+        console.log(`${key}:`, value.name);  // Imprime solo el nombre del archivo
+        console.log(`${key} size:`, value.size);  // Imprime el tamaño del archivo
+        console.log(`${key} type:`, value.type);  // Imprime el tipo de archivo
+      } else {
+        console.log(`${key}:`, value);
+      }
+    });
+
+    // Enviar el producto y la imagen al servidor
+    const response = await communicationManager.updateProduct(selectedProduct.value.ID_producto, formData);
+
+    if (response) {
+      await fetchProducts(); // Refrescar la lista de productos
+      closeModalEditProduct(); // Cerrar el modal
+    }
   } catch (error) {
     console.error('Error al actualizar el producto:', error);
   }

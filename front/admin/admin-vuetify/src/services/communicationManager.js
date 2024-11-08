@@ -8,7 +8,9 @@ async function getProducts() {
   try {
     const response = await fetch(`${URLbase}/products`);
     if (!response.ok) throw new Error('Error en la red');
-    return await response.json();
+    const products = await response.json();
+
+    return products;
   } catch (error) {
     console.error('Error al obtener productos:', error);
   }
@@ -19,7 +21,12 @@ async function getProduct(id) {
   try {
     const response = await fetch(`${URLbase}/product/${id}`);
     if (!response.ok) throw new Error('Error en la red');
-    return await response.json();
+    const product = await response.json();
+
+    // Agregar URL de imagen al producto
+    product.imagen = `${URLbase}/product/image/${product.imagen}`;
+
+    return product;
   } catch (error) {
     console.error(`Error al obtener el producto ${id}:`, error);
   }
@@ -41,13 +48,13 @@ async function postProduct(formData) {
 }
 
 // Actualizar un producto por ID
-async function updateProduct(id, productData) {
+async function updateProduct(id, formData) {
   try {
     const response = await fetch(`${URLbase}/product/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(productData),
+      body: formData, // Enviar FormData directamente
     });
+
     if (!response.ok) throw new Error('Error al actualizar producto');
     return await response.json();
   } catch (error) {
