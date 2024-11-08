@@ -5,6 +5,8 @@ import path from "path";
 import * as fs from 'fs';
 import express from 'express';
 import cors from 'cors';
+import { CLIENT_RENEG_LIMIT } from 'tls';
+import { log } from 'console';
 
 
 const app = express();
@@ -59,27 +61,33 @@ const storage = multer.diskStorage({
 
 
 // Insertar un nuevo producto
-async function postProduct(productData) {
+async function postProduct(productData, fotoRuta) {
     try {
-        const { nombre, descripcion, precio, stock } = req.body;
+        const { nombre, descripcion, precio, stock } = productData;
 
-        const fotoRuta = req.file.path;
-    
+        console.log(productData);
+
+        console.log(`Nombre: ${nombre}`);
+        console.log(`descripcion: ${descripcion}`);
+        console.log(`precio: ${precio}`);
+        console.log(`stock: ${stock}`);
+        
+
         const filename = fotoRuta.split("\\").pop();
     
-        console.log(filename);        
-
-        const productData = req.body + fotoRuta;
+        console.log("nombre foto: " + filename);        
+        
         // Inserción en la base de datos
-        const [result] = await pool.query('INSERT INTO Producto (nombre, descripcion, precio, stock) VALUES (?, ?, ?, ?)', 
-            [nombre, descripcion, precio, stock]);
+        const [result] = await pool.query('INSERT INTO Producto (nombre, descripcion, precio, stock, imagen) VALUES (?, ?, ?, ?, ?)', 
+            [nombre, descripcion, precio, stock, filename]);
 
         const newProduct = {
             ID_producto: result.insertId,
             nombre,
             descripcion,
             precio,
-            stock
+            stock,
+            filename
         };
 
         return newProduct;

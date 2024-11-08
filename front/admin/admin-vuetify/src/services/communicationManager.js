@@ -44,12 +44,20 @@ async function getProduct(id) {
 }
 
 // Crear un nuevo producto
-async function postProduct(productData) {
+async function postProduct(productData, imagen) {
   try {
+    const formProducte = new FormData();
+
+    formProducte.append('nombre', productData.nombre);
+    formProducte.append('descripcion', productData.descripcion);
+    formProducte.append('precio', productData.precio);
+    formProducte.append('imagen', imagen);
+    formProducte.append('stock', productData.stock);
+
+
     const response = await fetch(`${URLbase}/product`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(productData),
+      body: formProducte
     });
     if (!response.ok) throw new Error('Error al crear producto');
     return await response.json();
@@ -105,7 +113,7 @@ async function getUsers() {
 // Crear un nuevo usuario
 async function postUser(userData) {
   try {
-    const response = await fetch(`${URLbase}/user`, {  
+    const response = await fetch(`${URLbase}/user`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
@@ -217,7 +225,7 @@ async function getOrderProducts(orderId) {
   try {
     const response = await fetch(`${URLbase}/order/${orderId}/products`);
     if (!response.ok) throw new Error('Error en la red');
-    return await response.json(); 
+    return await response.json();
   } catch (error) {
     console.error(`Error al obtener los productos del pedido ${orderId}:`, error);
   }

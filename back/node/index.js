@@ -7,13 +7,16 @@ import mysql from 'mysql2/promise'; // Importar MySQL
 import multer from "multer"; // Para guardar imagenes
 import path from "path"; // Para crear rutas donde guardar las imagenes
 import * as fs from 'fs'; // Para poder leer el sistema de ficheros
+import bodyParser from "body-parser"
 
 // Importar communicationManager.js
 import { communicationManager } from './communicationManager.js'; // La extensión .js es obligatoria
 
 const app = express();
 app.use(cors()); // Habilitar CORS
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded());
+
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -99,10 +102,12 @@ app.get('/product/:id', async (req, res) => {
     }
 });
 
-app.post('/product', upload.single("imatge"), async (req, res) => {
+//crear producto
+app.post('/product', upload.single("imagen"), async (req, res) => {
     try {
         const productData = req.body;
-        const newProduct = await communicationManager.postProduct(productData);
+        const fotoRuta = req.file.path;
+        const newProduct = await communicationManager.postProduct(productData, fotoRuta);
         res.status(201).json(newProduct); // 201: Creado
     } catch (error) {
         res.status(500).json({ error: 'Error al crear el producto' });

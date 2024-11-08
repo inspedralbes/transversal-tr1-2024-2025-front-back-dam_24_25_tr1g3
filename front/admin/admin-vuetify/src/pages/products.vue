@@ -123,8 +123,11 @@ const searchQuery = ref(''); // Añadido para el campo de búsqueda
 
 // Abrir modal para crear producto
 const openModalCreateProduct = () => {
-  newProduct.value = { nombre: '', descripcion: '', precio: '', stock: '', imagen: '' };
+  newProduct.value = { nombre: '', descripcion: '', precio: '', stock: '' };
+
   isModalCreateProductOpen.value = true;
+
+
 };
 
 
@@ -168,7 +171,11 @@ const fetchProducts = async () => {
 // Función para crear un nuevo producto
 const createProduct = async () => {
   try {
-    await communicationManager.postProduct(newProduct.value);
+    const imageInput = document.querySelector('Input[type="file"]');
+
+    communicationManager.postProduct(newProduct.value, imageInput.files[0] );
+
+    // await communicationManager.postProduct(newProduct.value);
     await fetchProducts(); // Refrescar la lista de productos
     closeModalCreateProduct();
     await fetchProducts(); 
