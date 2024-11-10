@@ -129,6 +129,7 @@ async function deleteProduct(id) {
     }
 }
 
+
 // USERS
 
 // Obtener todos los usuarios

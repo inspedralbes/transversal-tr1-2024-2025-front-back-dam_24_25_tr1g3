@@ -130,15 +130,23 @@ app.put('/product/:id', async (req, res) => {
     }
 });
 
+
+//eliminar producto
 app.delete('/product/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const result = await communicationManager.deleteProduct(Number(id)); // Convertir ID a número
-
+        fs.rm(`public/${id}.jpg`, { force: true }, (err) => {
+            if (err) {
+              console.error('Error al eliminar el archivo:', err);
+            } else {
+              console.log('Archivo eliminado correctamente');
+            }
+          });
         if (!result) {
             return res.status(404).json({ error: 'Producto no encontrado para eliminar' });
         }
-
+        
         res.json({ message: 'Producto eliminado correctamente' });
     } catch (error) {
         res.status(500).json({ error: 'Error al eliminar el producto' });
