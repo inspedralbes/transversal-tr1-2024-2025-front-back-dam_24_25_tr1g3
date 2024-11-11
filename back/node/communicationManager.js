@@ -15,11 +15,11 @@ app.use(express.json());
 
 // Crear conexión a la base de datos usando mysql2/promise
 const pool = mysql.createPool({
-    host: 'dam.inspedralbes.cat',
-    user: 'a24moigarpov_tr1g3',  // Usuario proporcionado
-    password: 'InstitutPedralbes_2024',  // Contraseña proporcionada
-    database: 'a24moigarpov_a24bermirpre_tr1g3',  // Nombre de la base de datos
-    port: 3306,
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'a24bermirpre',  // Usuario proporcionado
+    password: process.env.DB_PASSWORD || 'InstitutPedralbes_2024',  // Contraseña proporcionada
+    database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos
+    port: process.env.DB_PORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
