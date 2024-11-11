@@ -31,10 +31,10 @@ app.use("/assets", express.static("public"));
 
 // Conectar a la base de datos MySQL
 const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'a24bermirpre',  // Usuario proporcionado
-    password: process.env.DB_PASSWORD || 'InstitutPedralbes_2024',  // Contraseña proporcionada
-    database: process.env.DB_NAME || 'a24bermirpre_tr1-g3',  // Nombre de la base de datos
+    host: 'dam.inspedralbes.cat',
+    user: 'a24moigarpov_tr1g3',  // Usuario proporcionado
+    password: 'InstitutPedralbes_2024',  // Contraseña proporcionada
+    database: 'a24moigarpov_a24bermirpre_tr1g3',  // Nombre de la base de datos
 };
 
 const storage = multer.diskStorage({
