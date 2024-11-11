@@ -19,6 +19,7 @@ const pool = mysql.createPool({
     user: 'a24moigarpov_tr1g3',  // Usuario proporcionado
     password: 'InstitutPedralbes_2024',  // Contraseña proporcionada
     database: 'a24moigarpov_a24bermirpre_tr1g3',  // Nombre de la base de datos
+    port: 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
